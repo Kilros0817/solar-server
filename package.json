@@ -1,0 +1,36 @@
+{
+  "name": "solar-server",
+  "version": "1.0.0",
+  "main": "app.js",
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "scripts": {
+    "build": "tsc",
+    "dev": "nodemon --exec ts-node app.ts",
+    "start": "node dist/app.js",
+    "start:dev": "ts-node app.ts"
+  },
+  "dependencies": {
+    "axios": "^1.5.1",
+    "body-parser": "^1.19.1",
+    "config": "^3.3.6",
+    "cors": "^2.8.5",
+    "ethers": "^6.8.1",
+    "express": "^4.17.2",
+    "mongoose": "^9.0.2",
+    "viem": "^2.37.12"
+  },
+  "devDependencies": {
+    "@types/body-parser": "^1.19.2",
+    "@types/config": "^3.3.0",
+    "@types/cors": "^2.8.13",
+    "@types/express": "^4.17.17",
+    "@types/express-session": "^1.17.7",
+    "@types/node": "^20.0.0",
+    "dotenv": "^10.0.0",
+    "nodemon": "^3.0.1",
+    "ts-node": "^10.9.0",
+    "typescript": "^5.0.0"
+  }
+}
