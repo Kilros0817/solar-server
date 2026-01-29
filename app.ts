@@ -4,10 +4,12 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { ensureClauseTemplatesSeeded } from './utils/seedClauseTemplates';
+import { ensureSectionTemplatesSeeded } from './utils/seedSectionTemplates';
 
 // Import routes
 import apiRouter from './routes/api';
 import clauseRouter from './routes/clause';
+import sectionRouter from './routes/section';
 
 // Create express app
 const app = express();
@@ -21,9 +23,15 @@ const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComp
 mongoose.connect(connectionString, {
 }).then(() => {
   console.log('Connected to Database');
-  ensureClauseTemplatesSeeded()
-    .then(() => console.log('Clause templates ensured'))
-    .catch((error) => console.error('Failed to seed clause templates:', error));
+  Promise.all([
+    ensureClauseTemplatesSeeded(),
+    ensureSectionTemplatesSeeded(),
+  ])
+    .then(() => {
+      console.log('Clause templates ensured');
+      console.log('Section templates ensured');
+    })
+    .catch((error) => console.error('Failed to seed templates:', error));
 }).catch((error) => {
   console.error('Error connecting to Database:', error);
 });
@@ -41,6 +49,7 @@ app
   .use(bodyParser.json())
   .use("/api", apiRouter)
   .use("/clause", clauseRouter)
+  .use("/section", sectionRouter)
 
 
 app.listen(8085, () => {

@@ -110,4 +110,22 @@ router.put('/:templateId', async (req: Request, res: Response): Promise<void> =>
   }
 });
 
+// DELETE /clause/:templateId
+router.delete('/:templateId', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { templateId } = req.params;
+    const deleted = await ClauseTemplate.findOneAndDelete({ templateId });
+
+    if (!deleted) {
+      res.status(404).json({ error: 'Clause template not found' });
+      return;
+    }
+
+    res.status(200).json({ message: 'Clause template deleted' });
+  } catch (error) {
+    console.error('DELETE /clause/:templateId error:', error);
+    res.status(500).json({ error: 'Failed to delete clause template' });
+  }
+});
+
 export default router;
