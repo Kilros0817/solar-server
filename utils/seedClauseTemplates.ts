@@ -8,7 +8,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Neither party shall be liable for any failure or delay in performing its obligations under this Agreement where such failure or delay results from any cause beyond the reasonable control of that party.',
     category: 'Risk Management',
-    usageCount: 312,
   },
   {
     templateId: 'c2',
@@ -17,7 +16,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Each party agrees to maintain the confidentiality of all Confidential Information disclosed by the other party and to use such information solely for the purposes of this Agreement.',
     category: 'Legal',
-    usageCount: 289,
   },
   {
     templateId: 'c3',
@@ -26,7 +24,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'During the term of this Agreement and for a period of twelve (12) months thereafter, neither party shall directly or indirectly solicit for employment any employee of the other party.',
     category: 'Legal',
-    usageCount: 156,
   },
   {
     templateId: 'c4',
@@ -35,7 +32,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       "In no event shall either party's aggregate liability exceed the total amount paid under this Agreement in the twelve (12) months preceding the claim.",
     category: 'Risk Management',
-    usageCount: 267,
   },
   {
     templateId: 'c5',
@@ -44,7 +40,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'This Agreement shall be governed by and construed in accordance with the laws of [Jurisdiction], without regard to its conflict of law provisions.',
     category: 'Legal',
-    usageCount: 401,
   },
   {
     templateId: 'c6',
@@ -53,7 +48,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Neither party may assign this Agreement without the prior written consent of the other party, except in the case of a merger or acquisition.',
     category: 'Legal',
-    usageCount: 198,
   },
   {
     templateId: 'c7',
@@ -62,7 +56,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       "Customer shall have the right, upon reasonable notice, to audit Vendor's compliance with the terms of this Agreement, including security and data protection measures.",
     category: 'Compliance',
-    usageCount: 134,
   },
   {
     templateId: 'c8',
@@ -71,7 +64,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Each party represents and warrants that it has full power and authority to enter into this Agreement and that its performance will not violate any other agreement.',
     category: 'Legal',
-    usageCount: 356,
   },
   {
     templateId: 'c9',
@@ -80,7 +72,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Each party agrees to indemnify and hold harmless the other party from any claims, damages, or expenses arising from its breach of this Agreement or negligent acts.',
     category: 'Risk Management',
-    usageCount: 278,
   },
   {
     templateId: 'c10',
@@ -89,7 +80,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       "Vendor shall process personal data only in accordance with Customer's written instructions and comply with all applicable data protection laws including GDPR.",
     category: 'Compliance',
-    usageCount: 223,
   },
   {
     templateId: 'c11',
@@ -98,7 +88,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'Any disputes shall first be subject to good-faith negotiation. If unresolved within 30 days, disputes shall be resolved through binding arbitration.',
     category: 'Legal',
-    usageCount: 187,
   },
   {
     templateId: 'c12',
@@ -107,7 +96,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'This Agreement may only be amended by written agreement signed by authorized representatives of both parties.',
     category: 'Legal',
-    usageCount: 245,
   },
   {
     templateId: 'c13',
@@ -116,7 +104,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'If any provision of this Agreement is held to be invalid or unenforceable, the remaining provisions shall continue in full force and effect.',
     category: 'Legal',
-    usageCount: 298,
   },
   {
     templateId: 'c14',
@@ -125,7 +112,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'This Agreement constitutes the entire agreement between the parties and supersedes all prior negotiations, representations, or agreements.',
     category: 'Legal',
-    usageCount: 334,
   },
   {
     templateId: 'c15',
@@ -134,7 +120,6 @@ const seedClauseTemplates: ClauseTemplateAttrs[] = [
     content:
       'All notices under this Agreement shall be in writing and sent to the addresses specified herein via email or certified mail.',
     category: 'Administrative',
-    usageCount: 267,
   },
 ];
 
@@ -146,14 +131,12 @@ export async function ensureClauseTemplatesSeeded(): Promise<void> {
       updateOne: {
         filter: { templateId: t.templateId },
         update: {
-          // keep existing usageCount once data is in production; only set it on insert
           $set: {
             name: t.name,
             description: t.description,
             content: t.content,
             category: t.category,
           },
-          $setOnInsert: { usageCount: t.usageCount },
         },
         upsert: true,
       },

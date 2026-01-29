@@ -3,7 +3,7 @@ import { ClauseTemplate, ClauseTemplateAttrs } from '../models/ClauseTemplate';
 
 const router = express.Router();
 
-// GET /api/clause-templates?category=Legal&q=confidential&page=1&limit=50
+// GET /clause?category=Legal&q=confidential&page=1&limit=50
 router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const { category, q, page, limit } = req.query as Record<string, string | undefined>;
@@ -18,7 +18,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const [items, total] = await Promise.all([
       ClauseTemplate.find(filter)
-        .sort({ usageCount: -1, name: 1 })
+        .sort({ name: 1 })
         .skip(skip)
         .limit(limitNum)
         .lean(),
@@ -27,12 +27,12 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     res.status(200).json({ items, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /clause-templates error:', error);
+    console.error('GET /clause error:', error);
     res.status(500).json({ error: 'Failed to fetch clause templates' });
   }
 });
 
-// GET /api/clause-templates/:templateId
+// GET /clause/:templateId
 router.get('/:templateId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { templateId } = req.params;
@@ -45,12 +45,12 @@ router.get('/:templateId', async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ item });
   } catch (error) {
-    console.error('GET /clause-templates/:templateId error:', error);
+    console.error('GET /clause/:templateId error:', error);
     res.status(500).json({ error: 'Failed to fetch clause template' });
   }
 });
 
-// POST /api/clause-templates
+// POST /clause
 router.post('/', async (req: Request, res: Response): Promise<void> => {
   try {
     const body = req.body as Partial<ClauseTemplateAttrs>;
@@ -66,7 +66,6 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       description: body.description,
       content: body.content,
       category: body.category,
-      usageCount: body.usageCount ?? 0,
     });
 
     res.status(201).json({ item: created.toObject() });
@@ -75,12 +74,12 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       res.status(409).json({ error: 'templateId already exists' });
       return;
     }
-    console.error('POST /clause-templates error:', error);
+    console.error('POST /clause error:', error);
     res.status(500).json({ error: 'Failed to create clause template' });
   }
 });
 
-// PUT /api/clause-templates/:templateId
+// PUT /clause/:templateId
 router.put('/:templateId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { templateId } = req.params;
@@ -94,7 +93,6 @@ router.put('/:templateId', async (req: Request, res: Response): Promise<void> =>
           ...(body.description !== undefined ? { description: body.description } : {}),
           ...(body.content !== undefined ? { content: body.content } : {}),
           ...(body.category !== undefined ? { category: body.category } : {}),
-          ...(body.usageCount !== undefined ? { usageCount: body.usageCount } : {}),
         },
       },
       { new: true }
@@ -107,11 +105,9 @@ router.put('/:templateId', async (req: Request, res: Response): Promise<void> =>
 
     res.status(200).json({ item: updated });
   } catch (error) {
-    console.error('PUT /clause-templates/:templateId error:', error);
+    console.error('PUT /clause/:templateId error:', error);
     res.status(500).json({ error: 'Failed to update clause template' });
   }
 });
 
 export default router;
-
-

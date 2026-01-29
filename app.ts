@@ -7,6 +7,7 @@ import { ensureClauseTemplatesSeeded } from './utils/seedClauseTemplates';
 
 // Import routes
 import apiRouter from './routes/api';
+import clauseRouter from './routes/clause';
 
 // Create express app
 const app = express();
@@ -39,6 +40,7 @@ app
   .use(bodyParser.urlencoded({ extended: true }))
   .use(bodyParser.json())
   .use("/api", apiRouter)
+  .use("/clause", clauseRouter)
 
 
 app.listen(8085, () => {

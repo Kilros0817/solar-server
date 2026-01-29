@@ -6,7 +6,6 @@ export interface ClauseTemplateAttrs {
   description: string;
   content: string;
   category: string;
-  usageCount: number;
 }
 
 export interface ClauseTemplateDoc extends Document, ClauseTemplateAttrs {
@@ -21,7 +20,6 @@ const ClauseTemplateSchema = new Schema<ClauseTemplateDoc>(
     description: { type: String, required: true, trim: true },
     content: { type: String, required: true },
     category: { type: String, required: true, index: true, trim: true },
-    usageCount: { type: Number, required: true, default: 0, min: 0 },
   },
   { timestamps: true }
 );

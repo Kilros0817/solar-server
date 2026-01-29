@@ -7,7 +7,6 @@ import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 
 import SolarDMS from '../abis/SolarDMS.json';
-import clauseTemplatesRouter from './clauseTemplates';
 
 dotenv.config();
 
@@ -47,9 +46,6 @@ const sponsorStatus = {
 };
 
 const router = express.Router();
-
-// Clause templates (MongoDB)
-router.use('/clause-templates', clauseTemplatesRouter);
 
 router.post('/delegate', async (req: Request, res: Response): Promise<void> => {
     try {
