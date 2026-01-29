@@ -5,11 +5,13 @@ import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 import { ensureClauseTemplatesSeeded } from './utils/seedClauseTemplates';
 import { ensureSectionTemplatesSeeded } from './utils/seedSectionTemplates';
+import { ensureContractTemplatesSeeded } from './utils/seedContractTemplates';
 
 // Import routes
 import apiRouter from './routes/api';
 import clauseRouter from './routes/clause';
 import sectionRouter from './routes/section';
+import contractRouter from './routes/contract';
 
 // Create express app
 const app = express();
@@ -26,10 +28,12 @@ mongoose.connect(connectionString, {
   Promise.all([
     ensureClauseTemplatesSeeded(),
     ensureSectionTemplatesSeeded(),
+    ensureContractTemplatesSeeded(),
   ])
     .then(() => {
       console.log('Clause templates ensured');
       console.log('Section templates ensured');
+      console.log('Contract templates ensured');
     })
     .catch((error) => console.error('Failed to seed templates:', error));
 }).catch((error) => {
@@ -50,6 +54,7 @@ app
   .use("/api", apiRouter)
   .use("/clause", clauseRouter)
   .use("/section", sectionRouter)
+  .use("/contract", contractRouter)
 
 
 app.listen(8085, () => {
