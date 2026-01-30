@@ -1,12 +1,7 @@
 {
   "contractName": "SolarDMS",
-  "contractAddress": "0xE74B59795A2634af63F1fc47add0b89aDEF5a74C",
+  "contractAddress": "0xE661187DE5e7651A83eB6EBC839A72A15200a1c2",
   "abi": [
-    {
-      "inputs": [],
-      "stateMutability": "nonpayable",
-      "type": "constructor"
-    },
     {
       "inputs": [],
       "name": "AlreadySigned",
@@ -25,6 +20,11 @@
     {
       "inputs": [],
       "name": "InvalidDoc",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "InvalidInitialization",
       "type": "error"
     },
     {
@@ -60,6 +60,11 @@
     {
       "inputs": [],
       "name": "NotDivisionMember",
+      "type": "error"
+    },
+    {
+      "inputs": [],
+      "name": "NotInitializing",
       "type": "error"
     },
     {
@@ -267,6 +272,19 @@
         }
       ],
       "name": "DocSubmittedToClient",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint64",
+          "name": "version",
+          "type": "uint64"
+        }
+      ],
+      "name": "Initialized",
       "type": "event"
     },
     {
@@ -542,29 +560,6 @@
       "type": "function"
     },
     {
-      "inputs": [
-        {
-          "internalType": "uint256",
-          "name": "docId",
-          "type": "uint256"
-        },
-        {
-          "internalType": "address",
-          "name": "divisionLeader",
-          "type": "address"
-        },
-        {
-          "internalType": "string",
-          "name": "cid",
-          "type": "string"
-        }
-      ],
-      "name": "assignSection",
-      "outputs": [],
-      "stateMutability": "nonpayable",
-      "type": "function"
-    },
-    {
       "inputs": [],
       "name": "clauseCount",
       "outputs": [
@@ -690,8 +685,18 @@
         },
         {
           "internalType": "string",
-          "name": "cid",
+          "name": "docCid",
           "type": "string"
+        },
+        {
+          "internalType": "address[]",
+          "name": "divisionLeaders",
+          "type": "address[]"
+        },
+        {
+          "internalType": "string[]",
+          "name": "sectionCids",
+          "type": "string[]"
         }
       ],
       "name": "createDoc",
@@ -762,6 +767,13 @@
         }
       ],
       "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "initialize",
+      "outputs": [],
+      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

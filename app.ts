@@ -12,6 +12,7 @@ import apiRouter from './routes/api';
 import clauseRouter from './routes/clause';
 import sectionRouter from './routes/section';
 import contractRouter from './routes/contract';
+import uploadRouter from './routes/upload';
 
 // Create express app
 const app = express();
@@ -55,6 +56,7 @@ app
   .use("/clause", clauseRouter)
   .use("/section", sectionRouter)
   .use("/contract", contractRouter)
+  .use("/upload", uploadRouter)
 
 
 app.listen(8085, () => {
