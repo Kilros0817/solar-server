@@ -49,6 +49,7 @@ interface ContractPayload {
   client: string;
   description: string;
   price: string;
+  category?: string;
   sections: Array<{
     sectionName: string;
     sectionContent: Array<{ clauseId: string; clauseContent: string }>;
