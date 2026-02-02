@@ -20,6 +20,7 @@
     "express": "^4.17.2",
     "graphql-request": "^7.4.0",
     "mongoose": "^9.0.2",
+    "redis": "^4.7.1",
     "viem": "^2.37.12"
   },
   "devDependencies": {

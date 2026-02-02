@@ -13,6 +13,7 @@ import clauseRouter from './routes/clause';
 import sectionRouter from './routes/section';
 import contractRouter from './routes/contract';
 import uploadRouter from './routes/upload';
+import subgraphRouter from './routes/subgraph';
 
 // Create express app
 const app = express();
@@ -57,6 +58,7 @@ app
   .use("/section", sectionRouter)
   .use("/contract", contractRouter)
   .use("/upload", uploadRouter)
+  .use("/subgraph", subgraphRouter)
 
 
 app.listen(8085, () => {
