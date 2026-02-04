@@ -1,7 +1,12 @@
 {
   "contractName": "SolarDMS",
-  "contractAddress": "0x3D375aCDB4b40c2dA5e9fA9edb5D2A0b75080E1e",
+  "contractAddress": "0xc41E08CfF0BD460099D1C4e62a69c17B2cE685E8",
   "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
     {
       "inputs": [],
       "name": "AlreadySigned",
@@ -20,11 +25,6 @@
     {
       "inputs": [],
       "name": "InvalidDoc",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "InvalidInitialization",
       "type": "error"
     },
     {
@@ -60,11 +60,6 @@
     {
       "inputs": [],
       "name": "NotDivisionMember",
-      "type": "error"
-    },
-    {
-      "inputs": [],
-      "name": "NotInitializing",
       "type": "error"
     },
     {
@@ -272,19 +267,6 @@
         }
       ],
       "name": "DocSubmittedToClient",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": false,
-          "internalType": "uint64",
-          "name": "version",
-          "type": "uint64"
-        }
-      ],
-      "name": "Initialized",
       "type": "event"
     },
     {
@@ -560,6 +542,29 @@
       "type": "function"
     },
     {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "sectionId",
+          "type": "uint256"
+        },
+        {
+          "internalType": "address[]",
+          "name": "members",
+          "type": "address[]"
+        },
+        {
+          "internalType": "string[]",
+          "name": "cids",
+          "type": "string[]"
+        }
+      ],
+      "name": "assignClausesToMembers",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
       "inputs": [],
       "name": "clauseCount",
       "outputs": [
@@ -767,13 +772,6 @@
         }
       ],
       "stateMutability": "view",
-      "type": "function"
-    },
-    {
-      "inputs": [],
-      "name": "initialize",
-      "outputs": [],
-      "stateMutability": "nonpayable",
       "type": "function"
     },
     {

@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 
 dotenv.config();
 
-const SUBGRAPH_URL = process.env.SUBGRAPH_URL ?? 'https://api.studio.thegraph.com/query/72239/solar-dms/version/latest';
+const SUBGRAPH_URL = process.env.SUBGRAPH_URL ?? 'https://api.studio.thegraph.com/query/72239/solar-dms-graph/version/latest';
 const REDIS_URL = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const CACHE_TTL_SECONDS = parseInt(String(process.env.SUBGRAPH_CACHE_TTL || '60'), 10);
 
@@ -53,7 +53,8 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ query }),
-    });
+    }); 
+
 
     const json = (await subgraphRes.json()) as { data?: unknown };
     const data = json?.data ?? json;

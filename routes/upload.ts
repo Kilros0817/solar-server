@@ -117,4 +117,41 @@ router.post('/sections', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+interface ClauseAssignmentPayload {
+  clauseId: string;
+  clauseContent: string;
+  divisionMemberAddress: string;
+  assignedDate: string;
+}
+
+// POST /upload/clauses - upload clause assignment JSONs to Pinata, return CIDs in order
+router.post('/clauses', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { clauses: clausePayloads } = req.body as { clauses: ClauseAssignmentPayload[] };
+    if (!Array.isArray(clausePayloads) || clausePayloads.length === 0) {
+      res.status(400).json({ error: 'clauses array is required and must not be empty' });
+      return;
+    }
+
+    const timestamp = Date.now();
+    const results = await Promise.all(
+      clausePayloads.map((payload, i) =>
+        pinJSONToIPFS(payload, `${timestamp}-clause-${i}`)
+      )
+    );
+    const failed = results.some((r) => !r.isSuccess);
+
+    if (failed) {
+      res.status(500).json({ error: 'Failed to upload clause assignments' });
+      return;
+    }
+
+    const clauseCids = results.map((r) => r.data!);
+    res.status(200).json({ clauseCids });
+  } catch (error) {
+    console.error('POST /upload/clauses error:', error);
+    res.status(500).json({ error: 'Failed to upload clause assignments' });
+  }
+});
+
 export default router;
