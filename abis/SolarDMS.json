@@ -1,6 +1,6 @@
 {
   "contractName": "SolarDMS",
-  "contractAddress": "0xc41E08CfF0BD460099D1C4e62a69c17B2cE685E8",
+  "contractAddress": "0x993B04fc3D2dF2c0449Fb409f2D535FC4Ba12448",
   "abi": [
     {
       "inputs": [],
@@ -138,25 +138,6 @@
           "internalType": "uint256",
           "name": "clauseId",
           "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "approved",
-          "type": "bool"
-        }
-      ],
-      "name": "ClauseLeaderReviewed",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "clauseId",
-          "type": "uint256"
         }
       ],
       "name": "ClauseReAssigned",
@@ -275,6 +256,57 @@
         {
           "indexed": true,
           "internalType": "uint256",
+          "name": "clauseId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "sectionCid",
+          "type": "string"
+        }
+      ],
+      "name": "LeaderApprovedClause",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "clauseId",
+          "type": "uint256"
+        }
+      ],
+      "name": "LeaderRejectedClause",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "sectionId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "docCid",
+          "type": "string"
+        }
+      ],
+      "name": "LegalApprovedSection",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
           "name": "docId",
           "type": "uint256"
         },
@@ -286,6 +318,19 @@
         }
       ],
       "name": "LegalEsigned",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "sectionId",
+          "type": "uint256"
+        }
+      ],
+      "name": "LegalRejectedSection",
       "type": "event"
     },
     {
@@ -436,25 +481,6 @@
         }
       ],
       "name": "SectionAssigned",
-      "type": "event"
-    },
-    {
-      "anonymous": false,
-      "inputs": [
-        {
-          "indexed": true,
-          "internalType": "uint256",
-          "name": "sectionId",
-          "type": "uint256"
-        },
-        {
-          "indexed": false,
-          "internalType": "bool",
-          "name": "approved",
-          "type": "bool"
-        }
-      ],
-      "name": "SectionLegalReviewd",
       "type": "event"
     },
     {
@@ -785,6 +811,11 @@
           "internalType": "bool",
           "name": "approve",
           "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "newSectionCid",
+          "type": "string"
         }
       ],
       "name": "leaderReviewClause",
@@ -821,6 +852,11 @@
           "internalType": "bool",
           "name": "approve",
           "type": "bool"
+        },
+        {
+          "internalType": "string",
+          "name": "newDocCid",
+          "type": "string"
         }
       ],
       "name": "legalReviewSection",
