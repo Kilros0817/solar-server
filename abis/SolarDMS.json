@@ -1,6 +1,6 @@
 {
   "contractName": "SolarDMS",
-  "contractAddress": "0x993B04fc3D2dF2c0449Fb409f2D535FC4Ba12448",
+  "contractAddress": "0x54EB5FEB989789445220E1a0f6f981602eBfCda1",
   "abi": [
     {
       "inputs": [],
@@ -235,6 +235,19 @@
         }
       ],
       "name": "DocCreated",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "docId",
+          "type": "uint256"
+        }
+      ],
+      "name": "DocReassigned",
       "type": "event"
     },
     {
@@ -675,6 +688,19 @@
         }
       ],
       "name": "clientEsign",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "docId",
+          "type": "uint256"
+        }
+      ],
+      "name": "clientReassignDoc",
       "outputs": [],
       "stateMutability": "nonpayable",
       "type": "function"
