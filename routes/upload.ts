@@ -154,4 +154,28 @@ router.post('/clauses', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
+// POST /upload/signature - upload signature payload (e.g. { signature: dataUrl }) to Pinata, return CID
+router.post('/signature', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { signature } = req.body as { signature?: string };
+    if (!signature || typeof signature !== 'string') {
+      res.status(400).json({ error: 'signature string is required' });
+      return;
+    }
+
+    const name = `signature-${Date.now()}`;
+    const result = await pinJSONToIPFS({ signature }, name);
+
+    if (!result.isSuccess) {
+      res.status(500).json({ error: 'Failed to upload signature' });
+      return;
+    }
+
+    res.status(200).json({ cid: result.data });
+  } catch (error) {
+    console.error('POST /upload/signature error:', error);
+    res.status(500).json({ error: 'Failed to upload signature' });
+  }
+});
+
 export default router;
