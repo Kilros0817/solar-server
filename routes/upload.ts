@@ -1,5 +1,7 @@
 import express, { Request, Response } from 'express';
 import axios from 'axios';
+import { Readable } from 'stream';
+import FormData from 'form-data';
 
 const router = express.Router();
 
@@ -154,28 +156,71 @@ router.post('/clauses', async (req: Request, res: Response): Promise<void> => {
   }
 });
 
-// POST /upload/signature - upload signature payload (e.g. { signature: dataUrl }) to Pinata, return CID
+// POST /upload/signature - upload e-signature image (data URL) to Pinata via pinFileToIPFS, return CID
 router.post('/signature', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { signature } = req.body as { signature?: string };
-    if (!signature || typeof signature !== 'string') {
-      res.status(400).json({ error: 'signature string is required' });
+    const imgDataUrl = (req.body?.imgUrl ?? req.body?.signature) as string | undefined;
+    if (!imgDataUrl || typeof imgDataUrl !== 'string' || !imgDataUrl.includes('base64,')) {
+      res.status(400).json({ error: 'Image data URL required (e.g. { signature: "data:image/png;base64,..." })' });
       return;
     }
-
-    const name = `signature-${Date.now()}`;
-    const result = await pinJSONToIPFS({ signature }, name);
-
-    if (!result.isSuccess) {
-      res.status(500).json({ error: 'Failed to upload signature' });
+    const result = await pinImgToIPFS(imgDataUrl);
+    if (result.isSuccess && result.data) {
+      res.status(200).json({ cid: result.data });
       return;
     }
-
-    res.status(200).json({ cid: result.data });
-  } catch (error) {
-    console.error('POST /upload/signature error:', error);
+    res.status(500).json({ error: 'Failed to upload signature image to Pinata' });
+  } catch (err) {
+    console.error(err, '========= error in upload esign =========');
     res.status(500).json({ error: 'Failed to upload signature' });
   }
 });
+
+const pinImgToIPFS = async (imgDataUrl: string): Promise<PinataResponse> => {
+  const pinata_api_key = process.env.PINATA_API_KEY;
+  const pinata_secret_api_key = process.env.PINATA_SECRETE_API_KEY;
+
+  if (!pinata_api_key || !pinata_secret_api_key) {
+    console.error('Pinata API keys not configured');
+    return { isSuccess: false, data: null };
+  }
+
+  const base64Data = imgDataUrl.split('base64,')[1];
+  if (!base64Data) {
+    console.error('Invalid image data URL: missing base64 payload');
+    return { isSuccess: false, data: null };
+  }
+
+  const bf = Buffer.from(base64Data, 'base64');
+  const stream = Readable.from(bf);
+  const data = new FormData();
+  data.append('file', stream, {
+    filepath: `${Date.now()}.png`,
+  });
+
+  try {
+    const res = await axios.post(
+      'https://api.pinata.cloud/pinning/pinFileToIPFS',
+      data,
+      {
+        headers: {
+          ...data.getHeaders(),
+          pinata_api_key,
+          pinata_secret_api_key,
+        },
+      }
+    );
+    return {
+      isSuccess: true,
+      data: res.data.IpfsHash,
+    };
+  } catch (error) {
+    console.error(error, 'Pinata pinFileToIPFS error');
+    return {
+      isSuccess: false,
+      data: null,
+    };
+  }
+};
 
 export default router;

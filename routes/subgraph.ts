@@ -36,17 +36,20 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
     }
 
     const cacheKey = getCacheKey(query);
+    const bypassCache = req.headers['x-bypass-cache'] === 'true';
 
-    try {
-      const redis = await getRedisClient();
-      const cached = await redis.get(cacheKey);
-      if (cached) {
-        const data = JSON.parse(cached);
-        res.json({ isSuccess: true, data });
-        return;
+    if (!bypassCache) {
+      try {
+        const redis = await getRedisClient();
+        const cached = await redis.get(cacheKey);
+        if (cached) {
+          const data = JSON.parse(cached);
+          res.json({ isSuccess: true, data });
+          return;
+        }
+      } catch (redisErr) {
+        console.warn('Redis cache read failed, querying subgraph directly:', redisErr);
       }
-    } catch (redisErr) {
-      console.warn('Redis cache read failed, querying subgraph directly:', redisErr);
     }
 
     const subgraphRes = await fetch(SUBGRAPH_URL, {
