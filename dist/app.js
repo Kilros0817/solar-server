@@ -37,7 +37,7 @@ mongoose_1.default.connect(connectionString, {}).then(() => {
     console.error('Error connecting to Database:', error);
 });
 const corsOptions = {
-    origin: ["http://localhost:3000"],
+    origin: ["http://localhost:3000", "https://app.tomeblock.com"],
     credentials: false,
 };
 app
