@@ -4,17 +4,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const ethers_1 = require("ethers");
 const dotenv_1 = __importDefault(require("dotenv"));
 const viem_1 = require("viem");
 const accounts_1 = require("viem/accounts");
 const chains_1 = require("viem/chains");
-const SolarDMS_json_1 = __importDefault(require("../abis/SolarDMS.json"));
 dotenv_1.default.config();
 const rpc = process.env.RPC;
-const provider = new ethers_1.ethers.JsonRpcProvider(rpc);
-const SolarDMSContract = new ethers_1.ethers.Contract(SolarDMS_json_1.default.contractAddress, SolarDMS_json_1.default.abi, provider);
-const sponsorWallet = new ethers_1.ethers.Wallet(process.env.TBSponsor, provider);
 const TBSponsor = (0, accounts_1.privateKeyToAccount)(`0x${process.env.TBSponsor}`);
 const TBSponsor1 = (0, accounts_1.privateKeyToAccount)(`0x${process.env.TBSponsor1}`);
 const TBSponsorClient = (0, viem_1.createWalletClient)({
@@ -51,18 +46,6 @@ router.post('/delegate', async (req, res) => {
             return;
         }
         res.status(200).json({ isSuccess: false });
-    }
-    catch (error) {
-        res.status(200).json({ isSuccess: false });
-    }
-});
-router.post('/subscribe', async (req, res) => {
-    try {
-        const address = req.body.address;
-        const unsignedTx = await SolarDMSContract.subscribe.populateTransaction(address);
-        const txRes = await sponsorWallet.sendTransaction(unsignedTx);
-        await txRes.wait();
-        res.status(200).json({ isSuccess: true });
     }
     catch (error) {
         res.status(200).json({ isSuccess: false });
