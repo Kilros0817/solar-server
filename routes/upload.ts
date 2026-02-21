@@ -123,7 +123,8 @@ interface ClauseAssignmentPayload {
   clauseId: string;
   clauseContent: string;
   divisionMemberAddress: string;
-  assignedDate: string;
+  /** Omitted so same clause + member yields same CID and avoids double-assign issues */
+  assignedDate?: string;
 }
 
 // POST /upload/clauses - upload clause assignment JSONs to Pinata, return CIDs in order
