@@ -1,25 +1,14 @@
 import express, { Request, Response } from 'express';
-import { ethers } from 'ethers';
 import dotenv from 'dotenv';
 
 import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 import { baseSepolia } from 'viem/chains';
 
-import SolarDMS from '../abis/SolarDMS.json';
-
 dotenv.config();
 
 const rpc = process.env.RPC!;
-const provider = new ethers.JsonRpcProvider(rpc);
 
-const SolarDMSContract = new ethers.Contract(
-    SolarDMS.contractAddress,
-    SolarDMS.abi,
-    provider
-);
-
-const sponsorWallet = new ethers.Wallet(process.env.TBSponsor!, provider);
 const TBSponsor = privateKeyToAccount(`0x${process.env.TBSponsor}`);
 const TBSponsor1 = privateKeyToAccount(`0x${process.env.TBSponsor1}`);
 
@@ -64,21 +53,6 @@ router.post('/delegate', async (req: Request, res: Response): Promise<void> => {
             return
         }
         res.status(200).json({ isSuccess: false });
-
-    } catch (error) {
-        res.status(200).json({ isSuccess: false });
-    }
-});
-
-router.post('/subscribe', async (req: Request, res: Response): Promise<void> => {
-    try {
-        const address = req.body.address;
-
-        const unsignedTx = await SolarDMSContract.subscribe.populateTransaction(address);
-        const txRes = await sponsorWallet.sendTransaction(unsignedTx);
-        await txRes.wait();
-
-        res.status(200).json({ isSuccess: true });
 
     } catch (error) {
         res.status(200).json({ isSuccess: false });
