@@ -3,9 +3,6 @@ import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
-import { ensureClauseTemplatesSeeded } from './utils/seedClauseTemplates';
-import { ensureSectionTemplatesSeeded } from './utils/seedSectionTemplates';
-import { ensureContractTemplatesSeeded } from './utils/seedContractTemplates';
 
 // Import routes
 import apiRouter from './routes/api';
@@ -27,17 +24,6 @@ const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComp
 mongoose.connect(connectionString, {
 }).then(() => {
   console.log('Connected to Database');
-  Promise.all([
-    ensureClauseTemplatesSeeded(),
-    ensureSectionTemplatesSeeded(),
-    ensureContractTemplatesSeeded(),
-  ])
-    .then(() => {
-      console.log('Clause templates ensured');
-      console.log('Section templates ensured');
-      console.log('Contract templates ensured');
-    })
-    .catch((error) => console.error('Failed to seed templates:', error));
 }).catch((error) => {
   console.error('Error connecting to Database:', error);
 });

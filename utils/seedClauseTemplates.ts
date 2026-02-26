@@ -1,6 +1,8 @@
 import { ClauseTemplate, ClauseTemplateAttrs } from '../models/ClauseTemplate';
+import { plainTextToLexicalJson } from './lexicalJson';
 
-const seedClauseTemplates: ClauseTemplateAttrs[] = [
+/** Seed data: content is plain text; converted to Lexical JSON when seeding. */
+const seedClauseTemplates: (Omit<ClauseTemplateAttrs, 'content'> & { content: string })[] = [
   {
     templateId: 'c1',
     name: 'Force Majeure',
@@ -134,7 +136,7 @@ export async function ensureClauseTemplatesSeeded(): Promise<void> {
           $set: {
             name: t.name,
             description: t.description,
-            content: t.content,
+            content: plainTextToLexicalJson(t.content),
             category: t.category,
           },
         },
