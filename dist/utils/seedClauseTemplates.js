@@ -2,6 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ensureClauseTemplatesSeeded = ensureClauseTemplatesSeeded;
 const ClauseTemplate_1 = require("../models/ClauseTemplate");
+const lexicalJson_1 = require("./lexicalJson");
 const seedClauseTemplates = [
     {
         templateId: 'c1',
@@ -119,7 +120,7 @@ async function ensureClauseTemplatesSeeded() {
                 $set: {
                     name: t.name,
                     description: t.description,
-                    content: t.content,
+                    content: (0, lexicalJson_1.plainTextToLexicalJson)(t.content),
                     category: t.category,
                 },
             },
