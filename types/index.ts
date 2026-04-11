@@ -15,3 +15,38 @@ export interface ProcessEnv {
   CLOUDINARY_API_SECRET: string;
   SECRET: string;
 } 
+
+// Contact Form Types
+export interface ContactRequest {
+  email: string;
+  subject: string;
+  message: string;
+}
+
+// Consultation Form Types
+export interface ConsultationRequest {
+  // Contact Information
+  fullName: string;
+  companyName: string;
+  workEmail: string;
+  phoneNumber?: string;
+  roleTitle: string;
+  
+  // Organization Overview
+  industry?: string;
+  companySize?: string;
+  departments?: string[];
+  otherDepartment?: string;
+  
+  // Current Workflow Context
+  challenges?: string;
+  usingTools?: boolean;
+  whichTools?: string;
+  improvements?: string[];
+  
+  // Engagement Details
+  preferredContactMethod?: string;
+  timeWindow?: string;
+  timezone?: string;
+  additionalNotes?: string;
+}

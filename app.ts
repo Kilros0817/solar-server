@@ -11,6 +11,7 @@ import sectionRouter from './routes/section';
 import contractRouter from './routes/contract';
 import uploadRouter from './routes/upload';
 import subgraphRouter from './routes/subgraph';
+import supportRouter from './routes/support';
 
 // Create express app
 const app = express();
@@ -29,7 +30,7 @@ mongoose.connect(connectionString, {
 });
 
 const corsOptions = {
-  origin: ["http://localhost:3000", "https://app.tomeblock.com"],
+  origin: ["http://localhost:3000", "https://app.tomeblock.com", "https://www.tomeblock.com"],
   credentials: false,
 };
 
@@ -44,6 +45,7 @@ app
   .use("/section", sectionRouter)
   .use("/contract", contractRouter)
   .use("/upload", uploadRouter)
+  .use("/support", supportRouter)
   .use("/subgraph", subgraphRouter)
 
 

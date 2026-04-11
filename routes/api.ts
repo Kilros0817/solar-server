@@ -7,8 +7,6 @@ import { baseSepolia } from 'viem/chains';
 
 dotenv.config();
 
-const rpc = process.env.RPC!;
-
 const TBSponsor = privateKeyToAccount(`0x${process.env.TBSponsor}`);
 const TBSponsor1 = privateKeyToAccount(`0x${process.env.TBSponsor1}`);
 
