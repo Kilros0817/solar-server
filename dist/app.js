@@ -14,6 +14,7 @@ const section_1 = __importDefault(require("./routes/section"));
 const contract_1 = __importDefault(require("./routes/contract"));
 const upload_1 = __importDefault(require("./routes/upload"));
 const subgraph_1 = __importDefault(require("./routes/subgraph"));
+const support_1 = __importDefault(require("./routes/support"));
 const app = (0, express_1.default)();
 dotenv_1.default.config();
 const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComponent(process.env.PASSWORD)}@cluster0.dwfddsb.mongodb.net/solar?retryWrites=true&w=majority`;
@@ -23,7 +24,7 @@ mongoose_1.default.connect(connectionString, {}).then(() => {
     console.error('Error connecting to Database:', error);
 });
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://app.tomeblock.com"],
+    origin: ["http://localhost:3000", "https://app.tomeblock.com", "https://www.tomeblock.com"],
     credentials: false,
 };
 app
@@ -35,6 +36,7 @@ app
     .use("/section", section_1.default)
     .use("/contract", contract_1.default)
     .use("/upload", upload_1.default)
+    .use("/support", support_1.default)
     .use("/subgraph", subgraph_1.default);
 app.listen(8085, () => {
     console.log("the server is running on port 8085");
