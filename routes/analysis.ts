@@ -1,6 +1,6 @@
 import express, { Request, Response } from 'express';
 import { querySubgraph } from './subgraph';
-import { buildReport, SubgraphData, DOC_SECTION_HISTORIES_QUERY } from '../utils/analysis';
+import { buildReport, SubgraphData, HISTORIES_QUERY } from '../utils/analysis';
 
 const router = express.Router();
 
@@ -11,7 +11,7 @@ const router = express.Router();
  */
 router.get('/report', async (_req: Request, res: Response): Promise<void> => {
   try {
-    const raw = await querySubgraph(DOC_SECTION_HISTORIES_QUERY) as SubgraphData;
+    const raw = await querySubgraph(HISTORIES_QUERY) as SubgraphData;
 
     if (!raw) {
       res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from subgraph' });

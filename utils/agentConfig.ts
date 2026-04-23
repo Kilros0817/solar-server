@@ -219,29 +219,29 @@ OUTPUT RULES
 - Output must start with { and end with }
 `;
 
-export const DOC_SECTION_HISTORIES_QUERY = `{
-  docHistories(orderBy: date) {
-    type
-    docStatus
-    date
-    document {
-      id
-    }
-  }
-  sectionHistories(orderBy: date) {
-    date
-    sectionStatus
-    type
-    section {
-      doc {
-        id
-      }
-      id
-      divisionLeader {
-        firstName
-        lastName
-        dcategory
-      }
-    }
-  }
-}`;
+// export const DOC_SECTION_HISTORIES_QUERY = `{
+//   docHistories(orderBy: date) {
+//     type
+//     docStatus
+//     date
+//     document {
+//       id
+//     }
+//   }
+//   sectionHistories(orderBy: date) {
+//     date
+//     sectionStatus
+//     type
+//     section {
+//       doc {
+//         id
+//       }
+//       id
+//       divisionLeader {
+//         firstName
+//         lastName
+//         dcategory
+//       }
+//     }
+//   }
+// }`;
