@@ -13,6 +13,7 @@ import uploadRouter from './routes/upload';
 import subgraphRouter from './routes/subgraph';
 import supportRouter from './routes/support';
 import agentRouter from './routes/agent';
+import analysisRouter from './routes/analysis';
 
 // Create express app
 const app = express();
@@ -48,7 +49,7 @@ app
   .use("/upload", uploadRouter)
   .use("/support", supportRouter)
   .use("/subgraph", subgraphRouter)
-  .use("/agent", agentRouter)
+  .use("/analysis", analysisRouter)
 
 
 app.listen(8085, () => {
