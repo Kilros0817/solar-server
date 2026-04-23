@@ -1,3 +1,5 @@
+// AI agent configuration — system prompts, model settings, and subgraph queries.
+
 export const DEFAULT_MODEL = 'gpt-4o';
 
 export const SYSTEM_PROMPT = `
@@ -29,23 +31,6 @@ Each item is a document event:
   }
 }
 
-Example:
-
-"docHistories": [
-  {
-    "type": 0,
-    "docStatus": 0,
-    "date": "1772345708",
-    "document": { "id": "2" }
-  },
-  {
-    "type": 1,
-    "docStatus": 1,
-    "date": "1776798242",
-    "document": { "id": "2" }
-  }
-]
-
 ------------------------------
 
 sectionHistories structure:
@@ -69,25 +54,6 @@ Each item is a section event:
   }
 }
 
-Example:
-
-"sectionHistories": [
-  {
-    "date": "1772345708",
-    "sectionStatus": 0,
-    "type": 0,
-    "section": {
-      "id": "2",
-      "doc": { "id": "2" },
-      "divisionLeader": {
-        "firstName": "Travis",
-        "lastName": "Lead",
-        "dcategory": 9
-      }
-    }
-  }
-]
-
 ------------------------------
 
 IMPORTANT NOTES
@@ -103,23 +69,23 @@ IMPORTANT NOTES
 
 DOCUMENT EVENT TYPES
 
-0 means created  
-1 means request  
-2 means approve  
-3 means reject  
-4 means client electronic signature  
-5 means legal electronic signature  
-6 means reassign  
+0 means created
+1 means request
+2 means approve
+3 means reject
+4 means client electronic signature
+5 means legal electronic signature
+6 means reassign
 
 --------------------------------------------------
 
 SECTION EVENT TYPES
 
-0 means assign  
-1 means request  
-2 means approve  
-3 means reject  
-4 means reassign  
+0 means assign
+1 means request
+2 means approve
+3 means reject
+4 means reassign
 
 --------------------------------------------------
 
@@ -144,81 +110,36 @@ COMPLETION
 A document is considered completed ONLY if:
 - it contains at least one event where docStatus equals 4
 
-Use docStatus to determine completion.
-
-Do NOT use type to determine completion.
-
 --------------------------------------------------
 
 CYCLE TIME
 
-Cycle time is defined as:
+Cycle time = first_event_time → first event where docStatus equals 4
 
-final_time minus first_event_time
-
-Where:
-
-- first_event_time is the timestamp of the earliest event in the document workflow
-
-- final_time is the timestamp of the FIRST event where docStatus equals 4
-
-RULES:
-
-- Use docStatus to determine the end of the workflow
-- Use only the first occurrence of docStatus equal to 4
-- Ignore all events that occur after docStatus equals 4
-
-INCLUDE ONLY documents that:
-- contain at least one event where docStatus equals 4
-- AND contain at least two events
-
-EXCLUDE:
-- documents without docStatus equal to 4
-- documents with only one event
-
-STRICT FILTERING:
-
-- First filter documents to only those with docStatus equal to 4
-- Then compute cycle time for each document
-- Then compute the average
-
-Do NOT:
-- use the last event timestamp
-- mix completed and incomplete documents
-- divide by total workflows
+Only include documents with docStatus = 4 and at least two events.
 
 --------------------------------------------------
 
 DOCUMENT WORKFLOW STEPS
 
 1. pending_to_request
-- first_event_time is the earliest event
-- request_time is the first event where type equals 1 after first_event_time
-- duration equals request_time minus first_event_time
+- first_event_time → first type=1
 
 2. request_to_approved
-- request_time is the first event where type equals 1
-- approved_time is the last event where type equals 2
-- duration equals approved_time minus request_time
+- first type=1 → last type=2
 
 3. approved_to_esigned
-- approved_time is the last event where type equals 2
-- esign_time is the first event after approved_time where type equals 5 or type equals 4
-- duration equals esign_time minus approved_time
+- last type=2 → first type=4 or type=5 after it
 
 --------------------------------------------------
 
 SECTION WORKFLOW STEPS
 
 1. assign_to_request
-- assign_time is the first event where type equals 0
-- request_time is the first event where type equals 1 after assign_time
-- duration equals request_time minus assign_time
+- first type=0 → first type=1 after it
 
 2. request_to_approve
-- request_time is the first event where type equals 1
-- approved_time is the last event where type equals 2
-- duration equals approved_time minus request_time
+- first type=1 → last type=2
 
 --------------------------------------------------
 
@@ -231,36 +152,20 @@ VALIDATION
 
 --------------------------------------------------
 
-METRICS
-
-For each stage compute:
-- average_duration
-
---------------------------------------------------
-
-LEADER
-
-leader must be formatted as:
-firstName + space + lastName
-
-If missing, set leader to null
-
---------------------------------------------------
-
 DIVISION
 
 Convert dcategory to string using:
 
-0 = NoDivision  
-1 = Legal  
-2 = ProjectManagement  
-3 = Preconstruction  
-4 = Estimating  
-5 = Finance  
-6 = Accounting  
-7 = RiskManagement  
-8 = Insurance  
-9 = Safety  
+0 = NoDivision
+1 = Legal
+2 = ProjectManagement
+3 = Preconstruction
+4 = Estimating
+5 = Finance
+6 = Accounting
+7 = RiskManagement
+8 = Insurance
+9 = Safety
 
 --------------------------------------------------
 
@@ -288,7 +193,7 @@ REQUIRED OUTPUT
           "leader": string or null,
           "bottleneck": {
             "stage": "assign_to_request | request_to_approve",
-            "average_duration": number or null
+            "duration": number or null
           }
         }
       ]
@@ -300,7 +205,7 @@ REQUIRED OUTPUT
 
 BOTTLENECK RULE
 
-- Select the stage with the highest average_duration
+- Select the stage with the highest duration
 - Never select null
 
 --------------------------------------------------

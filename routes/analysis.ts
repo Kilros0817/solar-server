@@ -1,7 +1,6 @@
 import express, { Request, Response } from 'express';
 import { querySubgraph } from './subgraph';
-import { buildReport, SubgraphData } from '../utils/analysis';
-import { DOC_SECTION_HISTORIES_QUERY } from '../utils/agentConfig';
+import { buildReport, SubgraphData, DOC_SECTION_HISTORIES_QUERY } from '../utils/analysis';
 
 const router = express.Router();
 

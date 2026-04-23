@@ -1,3 +1,32 @@
+// ─── Subgraph query ───────────────────────────────────────────────────────────
+
+export const DOC_SECTION_HISTORIES_QUERY = `{
+  docHistories(orderBy: date) {
+    type
+    docStatus
+    date
+    document {
+      id
+    }
+  }
+  sectionHistories(orderBy: date) {
+    date
+    sectionStatus
+    type
+    section {
+      doc {
+        id
+      }
+      id
+      divisionLeader {
+        firstName
+        lastName
+        dcategory
+      }
+    }
+  }
+}`;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DocHistory {
@@ -153,16 +182,16 @@ function analyzeSection(events: SectionHistory[]) {
       : null;
 
   // Bottleneck
-  const stages: { stage: string; average_duration: number | null }[] = [
-    { stage: 'assign_to_request', average_duration: assignToRequest },
-    { stage: 'request_to_approve', average_duration: requestToApprove },
+  const stages: { stage: string; duration: number | null }[] = [
+    { stage: 'assign_to_request', duration: assignToRequest },
+    { stage: 'request_to_approve', duration: requestToApprove },
   ];
 
   const bottleneck = stages
-    .filter((s) => s.average_duration !== null)
-    .sort((a, b) => b.average_duration! - a.average_duration!)[0] ?? {
+    .filter((s) => s.duration !== null)
+    .sort((a, b) => b.duration! - a.duration!)[0] ?? {
     stage: stages[0].stage,
-    average_duration: null,
+    duration: null,
   };
 
   return { division, leaderName, bottleneck };
