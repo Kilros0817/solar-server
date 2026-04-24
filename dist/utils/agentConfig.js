@@ -1,8 +1,8 @@
-// AI agent configuration — system prompts, model settings, and subgraph queries.
-
-export const DEFAULT_MODEL = 'gpt-4o';
-
-export const SYSTEM_PROMPT = `
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.SYSTEM_PROMPT = exports.DEFAULT_MODEL = void 0;
+exports.DEFAULT_MODEL = 'gpt-4o';
+exports.SYSTEM_PROMPT = `
 You are a senior data analyst specializing in workflow analytics.
 
 Your task is to analyze document workflows and section workflows to identify bottlenecks.
@@ -218,30 +218,3 @@ OUTPUT RULES
 - Do not include explanations
 - Output must start with { and end with }
 `;
-
-// export const DOC_SECTION_HISTORIES_QUERY = `{
-//   docHistories(orderBy: date) {
-//     type
-//     docStatus
-//     date
-//     document {
-//       id
-//     }
-//   }
-//   sectionHistories(orderBy: date) {
-//     date
-//     sectionStatus
-//     type
-//     section {
-//       doc {
-//         id
-//       }
-//       id
-//       divisionLeader {
-//         firstName
-//         lastName
-//         dcategory
-//       }
-//     }
-//   }
-// }`;

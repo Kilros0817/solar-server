@@ -12,7 +12,6 @@ import contractRouter from './routes/contract';
 import uploadRouter from './routes/upload';
 import subgraphRouter from './routes/subgraph';
 import supportRouter from './routes/support';
-import agentRouter from './routes/agent';
 import analysisRouter from './routes/analysis';
 
 // Create express app

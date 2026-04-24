@@ -3,6 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.querySubgraph = void 0;
 const express_1 = __importDefault(require("express"));
 const redis_1 = require("redis");
 const crypto_1 = __importDefault(require("crypto"));
@@ -26,6 +27,37 @@ const getCacheKey = (query) => {
     const hash = crypto_1.default.createHash('sha256').update(normalized).digest('hex');
     return `subgraph:${hash}`;
 };
+const querySubgraph = async (query, bypassCache = false) => {
+    const cacheKey = getCacheKey(query);
+    if (!bypassCache) {
+        try {
+            const redis = await getRedisClient();
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                return JSON.parse(cached);
+            }
+        }
+        catch (redisErr) {
+            console.warn('Redis cache read failed, querying subgraph directly:', redisErr);
+        }
+    }
+    const subgraphRes = await fetch(SUBGRAPH_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query }),
+    });
+    const json = (await subgraphRes.json());
+    const data = json?.data ?? json;
+    try {
+        const redis = await getRedisClient();
+        await redis.setEx(cacheKey, CACHE_TTL_SECONDS, JSON.stringify(data));
+    }
+    catch (redisErr) {
+        console.warn('Redis cache write failed:', redisErr);
+    }
+    return data;
+};
+exports.querySubgraph = querySubgraph;
 router.post('/', async (req, res) => {
     try {
         const { query } = req.body;
@@ -33,36 +65,8 @@ router.post('/', async (req, res) => {
             res.status(400).json({ error: 'query string is required' });
             return;
         }
-        const cacheKey = getCacheKey(query);
         const bypassCache = req.headers['x-bypass-cache'] === 'true';
-        if (!bypassCache) {
-            try {
-                const redis = await getRedisClient();
-                const cached = await redis.get(cacheKey);
-                if (cached) {
-                    const data = JSON.parse(cached);
-                    res.json({ isSuccess: true, data });
-                    return;
-                }
-            }
-            catch (redisErr) {
-                console.warn('Redis cache read failed, querying subgraph directly:', redisErr);
-            }
-        }
-        const subgraphRes = await fetch(SUBGRAPH_URL, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ query }),
-        });
-        const json = (await subgraphRes.json());
-        const data = json?.data ?? json;
-        try {
-            const redis = await getRedisClient();
-            await redis.setEx(cacheKey, CACHE_TTL_SECONDS, JSON.stringify(data));
-        }
-        catch (redisErr) {
-            console.warn('Redis cache write failed:', redisErr);
-        }
+        const data = await (0, exports.querySubgraph)(query, bypassCache);
         res.json({ isSuccess: true, data });
     }
     catch (error) {
