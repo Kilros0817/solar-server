@@ -12,9 +12,15 @@ dotenv.config();
 
 const router = express.Router();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
+// Lazily initialized so the API key is read at request time, not at module load
+// (avoids issues where dotenv hasn't run yet when this module is first imported)
+let openai: OpenAI | null = null;
+const getOpenAIClient = (): OpenAI => {
+  if (!openai) {
+    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  }
+  return openai;
+};
 
 /**
  * Format seconds into a human-readable duration.
@@ -198,14 +204,14 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     const prompt = generateOpenAIPrompt(report);
 
     // Check if OpenAI client is initialized
-    if (!openai) {
-      throw new Error('OpenAI client not initialized');
+    if (!process.env.OPENAI_API_KEY) {
+      throw new Error('OPENAI_API_KEY is not set');
     }
 
-    // Use OpenAI SDK with ProxyAgent
+    // Use OpenAI SDK
     let completion;
     try {
-      completion = await openai.chat.completions.create({
+      completion = await getOpenAIClient().chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-4o',
         messages: [
           {

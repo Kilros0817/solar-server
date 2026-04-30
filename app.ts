@@ -4,6 +4,9 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
+// Load env vars before anything else (matters for local dev)
+dotenv.config();
+
 // Import routes
 import apiRouter from './routes/api';
 import clauseRouter from './routes/clause';
@@ -16,10 +19,6 @@ import analysisRouter from './routes/analysis';
 
 // Create express app
 const app = express();
-
-// app.enable('trust proxy');
-
-dotenv.config();
 
 const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComponent(process.env.PASSWORD!)}@cluster0.dwfddsb.mongodb.net/solar?retryWrites=true&w=majority`;
 // Connect to MongoDB Atlas
