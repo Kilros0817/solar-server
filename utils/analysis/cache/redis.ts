@@ -1,65 +1,22 @@
-import crypto from 'crypto';
-import { getRedisClient, querySubgraph } from '../../../routes/subgraph';
+// Redis disabled — this file is kept as a stub so existing imports don't break
+import { querySubgraph } from '../../../routes/subgraph';
 import { SubgraphData, HISTORIES_QUERY } from '../core/types';
 
-// Cache TTL for report data (10 minutes)
+// Redis disabled — TTL and cache key helpers are no-ops
 export const REPORT_CACHE_TTL_SECONDS = 600;
+export const getReportCacheKey = (_dataHash: string): string => '';
+export const getSubgraphDataCacheKey = (): string => '';
 
 /**
- * Helper function to get cache key for report data
- */
-export const getReportCacheKey = (dataHash: string): string => {
-  return `analysis:report:${dataHash}`;
-};
-
-/**
- * Helper function to get cache key for subgraph data
- */
-export const getSubgraphDataCacheKey = (): string => {
-  return 'analysis:subgraph:data';
-};
-
-/**
- * Helper function to generate hash from data
- */
-const generateDataHash = (data: SubgraphData): string => {
-  const dataString = JSON.stringify(data);
-  return crypto.createHash('sha256').update(dataString).digest('hex');
-};
-
-/**
- * Helper function to get subgraph data with caching
+ * Fetches subgraph data directly without caching (Redis disabled).
  */
 export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; hash: string } | null> => {
   try {
-    const redis = await getRedisClient();
-
-    // First, try to get cached subgraph data
-    const cachedData = await redis.get(getSubgraphDataCacheKey());
-    if (cachedData) {
-      const parsedData = JSON.parse(cachedData);
-      const dataHash = crypto.createHash('sha256').update(cachedData).digest('hex');
-      return { data: parsedData, hash: dataHash };
-    }
-
-    // If no cache, fetch from subgraph
     const raw = await querySubgraph(HISTORIES_QUERY) as SubgraphData;
-    if (!raw) {
-      return null;
-    }
-
-    // Cache the raw data
-    const dataHash = generateDataHash(raw);
-    await redis.setEx(getSubgraphDataCacheKey(), REPORT_CACHE_TTL_SECONDS, JSON.stringify(raw));
-
-    return { data: raw, hash: dataHash };
+    if (!raw) return null;
+    return { data: raw, hash: '' };
   } catch (error) {
-    console.warn('Redis cache error, fetching fresh data:', error);
-    const raw = await querySubgraph(HISTORIES_QUERY) as SubgraphData;
-    if (!raw) {
-      return null;
-    }
-    const dataHash = generateDataHash(raw);
-    return { data: raw, hash: dataHash };
+    console.warn('Failed to fetch subgraph data:', error);
+    return null;
   }
 };
