@@ -216,7 +216,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     let completion;
     try {
       completion = await openai.chat.completions.create({
-        model: process.env.OPENAI_MODEL || 'gpt-4o',
+        model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
         messages: [
           {
             role: 'system',
