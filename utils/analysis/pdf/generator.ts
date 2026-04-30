@@ -19,7 +19,7 @@ function parseHTML(html: string): Array<{ type: string; text: string; level?: nu
   html = html.replace(/\r\n|\r/g, '\n').replace(/\n{3,}/g, '\n\n');
 
   // Walk through block-level tags
-  const blockRe = /<(h[1-3]|p|li|br\s*\/?)(?:[^>]*)>([\s\S]*?)<\/\1>|<br\s*\/?>/gi;
+  const blockRe = /<(h[1-3]|p|li|div|br\s*\/?)(?:[^>]*)>([\s\S]*?)<\/\1>|<br\s*\/?>/gi;
   let match: RegExpExecArray | null;
 
   while ((match = blockRe.exec(html)) !== null) {
@@ -38,6 +38,11 @@ function parseHTML(html: string): Array<{ type: string; text: string; level?: nu
       tokens.push({ type: 'li', text: inner });
     } else if (tag === 'p' && inner) {
       tokens.push({ type: 'p', text: inner });
+    } else if (tag === 'div' && inner) {
+      // Render div content as plain paragraphs (e.g. footer divs)
+      for (const line of inner.split('\n').map(l => l.trim()).filter(Boolean)) {
+        tokens.push({ type: 'p', text: line });
+      }
     }
   }
 
