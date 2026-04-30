@@ -1,0 +1,7 @@
+{
+  "functions": {
+    "dist/app.js": {
+      "maxDuration": 60
+    }
+  }
+}

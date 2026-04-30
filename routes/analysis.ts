@@ -228,7 +228,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
           }
         ],
         temperature: 0.3,
-        max_tokens: 4000
+        max_tokens: 2000
       });
     } catch (openaiError: any) {
       console.error('OpenAI API call failed:', openaiError);
