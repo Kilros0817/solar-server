@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { ProxyAgent } from 'undici';
 import { 
   getOrBuildReport, 
   generatePDFFromHTML, 
@@ -12,15 +13,18 @@ dotenv.config();
 
 const router = express.Router();
 
-// Lazily initialized so the API key is read at request time, not at module load
-// (avoids issues where dotenv hasn't run yet when this module is first imported)
-let openai: OpenAI | null = null;
-const getOpenAIClient = (): OpenAI => {
-  if (!openai) {
-    openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-  }
-  return openai;
-};
+// Initialize OpenAI client with ProxyAgent
+const proxyAgent = process.env.API_PROXY
+  ? new ProxyAgent(process.env.API_PROXY)
+  : null;
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+  fetch: (url, options) => {
+    if (!proxyAgent) return fetch(url, options as RequestInit);
+    return fetch(url, { ...(options as RequestInit), dispatcher: proxyAgent } as RequestInit);
+  },
+});
 
 /**
  * Format seconds into a human-readable duration.
@@ -211,7 +215,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     // Use OpenAI SDK
     let completion;
     try {
-      completion = await getOpenAIClient().chat.completions.create({
+      completion = await openai.chat.completions.create({
         model: process.env.OPENAI_MODEL || 'gpt-4o',
         messages: [
           {
