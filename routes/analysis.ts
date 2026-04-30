@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
+import { ProxyAgent } from 'undici';
 import { 
   getOrBuildReport, 
   generatePDFFromHTML, 
@@ -12,8 +13,17 @@ dotenv.config();
 
 const router = express.Router();
 
+// Initialize OpenAI client with ProxyAgent
+const proxyAgent = process.env.API_PROXY
+  ? new ProxyAgent(process.env.API_PROXY)
+  : null;
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
+  fetch: (url, options) => {
+    if (!proxyAgent) return fetch(url, options as RequestInit);
+    return fetch(url, { ...(options as RequestInit), dispatcher: proxyAgent } as RequestInit);
+  },
 });
 
 /**
