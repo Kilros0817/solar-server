@@ -16,6 +16,10 @@ const getSubgraphDataCacheKey = () => {
     return 'analysis:subgraph:data';
 };
 exports.getSubgraphDataCacheKey = getSubgraphDataCacheKey;
+const generateDataHash = (data) => {
+    const dataString = JSON.stringify(data);
+    return crypto_1.default.createHash('sha256').update(dataString).digest('hex');
+};
 const getSubgraphDataWithCache = async () => {
     try {
         const redis = await (0, subgraph_1.getRedisClient)();
@@ -29,9 +33,8 @@ const getSubgraphDataWithCache = async () => {
         if (!raw) {
             return null;
         }
-        const dataString = JSON.stringify(raw);
-        const dataHash = crypto_1.default.createHash('sha256').update(dataString).digest('hex');
-        await redis.setEx((0, exports.getSubgraphDataCacheKey)(), exports.REPORT_CACHE_TTL_SECONDS, dataString);
+        const dataHash = generateDataHash(raw);
+        await redis.setEx((0, exports.getSubgraphDataCacheKey)(), exports.REPORT_CACHE_TTL_SECONDS, JSON.stringify(raw));
         return { data: raw, hash: dataHash };
     }
     catch (error) {
@@ -40,8 +43,7 @@ const getSubgraphDataWithCache = async () => {
         if (!raw) {
             return null;
         }
-        const dataString = JSON.stringify(raw);
-        const dataHash = crypto_1.default.createHash('sha256').update(dataString).digest('hex');
+        const dataHash = generateDataHash(raw);
         return { data: raw, hash: dataHash };
     }
 };

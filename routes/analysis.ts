@@ -7,6 +7,7 @@ import {
   generatePDFFromHTML, 
   markdownToHTML 
 } from '../utils/analysis';
+import { AnalysisReport } from '../utils/analysis/core/types';
 
 dotenv.config();
 
@@ -24,6 +25,147 @@ const openai = new OpenAI({
     return fetch(url, { ...(options as RequestInit), dispatcher: proxyAgent } as RequestInit);
   },
 });
+
+/**
+ * Format seconds into a human-readable duration.
+ * Uses minutes when the value is less than 1 hour.
+ */
+function formatDuration(seconds: number | null): string {
+  if (seconds === null) return 'N/A';
+  const hours = Math.round(seconds / 3600);
+  if (hours === 0) {
+    const minutes = Math.round(seconds / 60);
+    return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
+  }
+  return `${hours} hour${hours !== 1 ? 's' : ''}`;
+}
+
+/**
+ * Generate OpenAI prompt for report generation
+ */
+function generateOpenAIPrompt(report: AnalysisReport): string {
+  // Build detailed division data for the prompt
+  const divisionEntries = Object.entries(report.division_rollup);
+
+  const divisionData = divisionEntries
+    .map(([division, stats]) => {
+      return `  - ${division}:
+      - Sections: ${stats.section_count}
+      - Avg Assign to Request: ${formatDuration(stats.avg_assign_to_request)}
+      - Avg Request to Approve: ${formatDuration(stats.avg_request_to_approve)}
+      - Total Rejects: ${stats.total_rejects}
+      - Total Reassigns: ${stats.total_reassigns}
+      - Bottleneck: ${stats.bottleneck_stage || 'N/A'}`;
+    })
+    .join('\n');
+
+  // Pre-compute bottleneck analysis so OpenAI has concrete content to write about
+  const bottleneckLines = divisionEntries
+    .filter(([, stats]) => stats.bottleneck_stage)
+    .map(([division, stats]) => {
+      const stageTime = stats.bottleneck_stage === 'assign_to_request'
+        ? formatDuration(stats.avg_assign_to_request)
+        : formatDuration(stats.avg_request_to_approve);
+      return `  - ${division}: bottleneck at "${stats.bottleneck_stage}" stage (avg ${stageTime}), ${stats.total_rejects} reject(s), ${stats.total_reassigns} reassign(s)`;
+    })
+    .join('\n');
+
+  // Pre-compute recommendations hints
+  const highRejectDivisions = divisionEntries
+    .filter(([, s]) => s.total_rejects > 0)
+    .map(([d, s]) => `${d} (${s.total_rejects} rejects)`);
+  const highReassignDivisions = divisionEntries
+    .filter(([, s]) => s.total_reassigns > 0)
+    .map(([d, s]) => `${d} (${s.total_reassigns} reassigns)`);
+  const slowAssignDivisions = divisionEntries
+    .filter(([, s]) => s.avg_assign_to_request !== null && s.avg_assign_to_request > 3600)
+    .sort(([, a], [, b]) => (b.avg_assign_to_request ?? 0) - (a.avg_assign_to_request ?? 0))
+    .map(([d, s]) => `${d} (${formatDuration(s.avg_assign_to_request)})`);
+
+  return `You are generating a professional analytics report for a solar contract management system. 
+Write complete, specific content for every section using the data provided. Do NOT write placeholder text like "to be added" or "details here".
+
+DATA:
+Summary:
+- Total workflows: ${report.summary.total_workflows}
+- Completed: ${report.summary.completed_workflows} (${report.summary.completion_rate_percent}%)
+- Avg cycle time: ${formatDuration(report.summary.average_cycle_time)}
+- Documents analyzed: ${report.documents.length}
+
+Division Performance:
+${divisionData}
+
+Bottleneck Analysis (pre-computed):
+${bottleneckLines || '  - No bottlenecks identified'}
+
+Divisions with rejects: ${highRejectDivisions.length ? highRejectDivisions.join(', ') : 'None'}
+Divisions with reassigns: ${highReassignDivisions.length ? highReassignDivisions.join(', ') : 'None'}
+Slowest assign-to-request divisions: ${slowAssignDivisions.length ? slowAssignDivisions.join(', ') : 'None'}
+
+INSTRUCTIONS:
+Generate a complete HTML report with these sections. Every section must contain real, specific content derived from the data above — no placeholders.
+
+1. Executive Summary: Summarize overall workflow health, completion rate, and cycle time in 2-3 sentences.
+2. Key Metrics: List the summary numbers in a clear format.
+3. Division Performance: For each division, describe its performance using the stats above.
+4. Bottleneck Analysis: For each division with a bottleneck, explain which stage is slow and what the numbers suggest.
+5. Recommendations: Based on the reject/reassign/bottleneck data, give 3-5 specific, actionable recommendations.
+6. Technical Details: List the raw metrics (section counts, stage durations) in a structured format.
+
+Return ONLY valid HTML using h1, h2, h3, p, ul, li, strong tags. No markdown, no code fences.`;
+}
+
+/**
+ * Generate fallback basic report when OpenAI fails
+ */
+async function generateFallbackReport(error: unknown): Promise<{ pdfBuffer: Buffer; filename: string } | null> {
+  const result = await getOrBuildReport();
+  if (!result) {
+    return null;
+  }
+
+  const { report } = result;
+  
+  // Build division details for fallback report
+  const divisionDetails = Object.entries(report.division_rollup)
+    .map(([division, stats]) => {
+      return `### ${division}
+- Sections: ${stats.section_count}
+- Avg Assign to Request: ${formatDuration(stats.avg_assign_to_request)}
+- Avg Request to Approve: ${formatDuration(stats.avg_request_to_approve)}
+- Total Rejects: ${stats.total_rejects}
+- Total Reassigns: ${stats.total_reassigns}
+- Bottleneck: ${stats.bottleneck_stage || 'N/A'}`;
+    })
+    .join('\n\n');
+
+  const basicReport = `# Analytics Report
+
+## Summary
+- Total Workflows: ${report.summary.total_workflows}
+- Completed Workflows: ${report.summary.completed_workflows}
+- Completion Rate: ${report.summary.completion_rate_percent}%
+- Average Cycle Time: ${formatDuration(report.summary.average_cycle_time)}
+
+## Division Performance
+${divisionDetails}
+
+## Note
+OpenAI report generation failed. This is a basic report.
+
+Error: ${typeof error === 'string' ? error.substring(0, 200) : String(error).substring(0, 200)}
+
+Generated: ${new Date().toLocaleString()}`;
+  
+  // Convert markdown to HTML and generate PDF
+  const htmlContent = markdownToHTML(basicReport);
+  const pdfBuffer = await generatePDFFromHTML(htmlContent);
+  
+  return {
+    pdfBuffer,
+    filename: `analytics-report-basic-${Date.now()}.pdf`
+  };
+}
 
 /**
  * GET /analysis/report
@@ -63,24 +205,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
 
     const { report } = result;
 
-    const prompt = `Create an analytics report for contract management system.
-
-      Metrics:
-      - Total: ${report.summary.total_workflows} workflows
-      - Completed: ${report.summary.completed_workflows} (${report.summary.completion_rate_percent}%)
-      - Avg Cycle: ${report.summary.average_cycle_time ? Math.round(report.summary.average_cycle_time / 3600) + ' hours' : 'N/A'}
-      - Divisions: ${Object.keys(report.division_rollup).length}
-      - Documents: ${report.documents.length} analyzed
-
-      Return clean HTML for PDF conversion. Use h1, h2, h3, p, ul, li tags. Include:
-      1. Executive Summary
-      2. Key Metrics
-      3. Division Performance
-      4. Bottleneck Analysis
-      5. Recommendations
-      6. Technical Details
-
-      Return ONLY HTML content.`;
+    const prompt = generateOpenAIPrompt(report);
 
     // Check if OpenAI client is initialized
     if (!openai) {
@@ -120,8 +245,14 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
       throw new Error('OpenAI API returned empty response content');
     }
 
+    // Strip markdown code fences (e.g. ```html ... ```) that the model may wrap around the HTML
+    const cleanedContent = reportContent
+      .replace(/^```(?:html)?\s*/i, '')
+      .replace(/\s*```\s*$/, '')
+      .trim();
+
     // Generate PDF from HTML content
-    const pdfBuffer = await generatePDFFromHTML(reportContent);
+    const pdfBuffer = await generatePDFFromHTML(cleanedContent);
     
     // Set PDF headers
     res.setHeader('Content-Type', 'application/pdf');
@@ -135,33 +266,13 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     
     // Try to provide a fallback basic report if OpenAI fails
     try {
-      const result = await getOrBuildReport();
-      if (result) {
-        const { report } = result;
+      const fallbackResult = await generateFallbackReport(error);
+      if (fallbackResult) {
+        const { pdfBuffer, filename } = fallbackResult;
         
-        // Generate a basic report without OpenAI
-        const basicReport = `# Analytics Report
-
-          ## Summary
-          - Total Workflows: ${report.summary.total_workflows}
-          - Completed Workflows: ${report.summary.completed_workflows}
-          - Completion Rate: ${report.summary.completion_rate_percent}%
-          - Average Cycle Time: ${report.summary.average_cycle_time ? report.summary.average_cycle_time + ' seconds' : 'N/A'}
-
-          ## Note
-          OpenAI report generation failed. This is a basic report.
-
-          Error: ${typeof error === 'string' ? error.substring(0, 200) : String(error).substring(0, 200)}
-
-          Generated: ${new Date().toLocaleString()}`;
-        
-        // Convert markdown to HTML and generate PDF
-        const htmlContent = markdownToHTML(basicReport);
-        const pdfBuffer = await generatePDFFromHTML(htmlContent);
-        
-        // Set PDF headers for fallback too
+        // Set PDF headers for fallback
         res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Disposition', `attachment; filename="analytics-report-basic-${Date.now()}.pdf"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Length', pdfBuffer.length.toString());
         
         res.send(pdfBuffer);

@@ -5,6 +5,23 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.generatePDFFromHTML = void 0;
 const puppeteer_1 = __importDefault(require("puppeteer"));
+const PDF_CONFIG = {
+    format: 'A4',
+    margin: {
+        top: '50px',
+        right: '50px',
+        bottom: '50px',
+        left: '50px',
+    },
+    printBackground: true,
+    displayHeaderFooter: true,
+};
+function getHeaderTemplate() {
+    return '<div style="font-size: 10px; margin: 0 auto; text-align: center; width: 100%;">Solar DMS Analytics Report</div>';
+}
+function getFooterTemplate() {
+    return `<div style="font-size: 8px; margin: 0 auto; text-align: center; width: 100%;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated: ${new Date().toLocaleDateString()}</div>`;
+}
 const generatePDFFromHTML = async (htmlContent) => {
     let browser;
     try {
@@ -17,17 +34,9 @@ const generatePDFFromHTML = async (htmlContent) => {
             waitUntil: 'networkidle0',
         });
         const pdfUint8Array = await page.pdf({
-            format: 'A4',
-            margin: {
-                top: '50px',
-                right: '50px',
-                bottom: '50px',
-                left: '50px',
-            },
-            printBackground: true,
-            displayHeaderFooter: true,
-            headerTemplate: '<div style="font-size: 10px; margin: 0 auto; text-align: center; width: 100%;">Solar DMS Analytics Report</div>',
-            footerTemplate: '<div style="font-size: 8px; margin: 0 auto; text-align: center; width: 100%;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated: ' + new Date().toLocaleDateString() + '</div>',
+            ...PDF_CONFIG,
+            headerTemplate: getHeaderTemplate(),
+            footerTemplate: getFooterTemplate(),
         });
         return Buffer.from(pdfUint8Array);
     }

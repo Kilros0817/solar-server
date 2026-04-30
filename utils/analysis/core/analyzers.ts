@@ -102,14 +102,27 @@ export function analyzeDocument(events: DocHistory[]) {
   };
 }
 
-// ─── Section analysis ─────────────────────────────────────────────────────────
+// ─── Common analysis helper ───────────────────────────────────────────────────
 
-export function analyzeSection(events: SectionHistory[]) {
+interface AssignmentEvent {
+  type: number;
+  date: string;
+}
+
+interface AssignmentAnalysisResult {
+  stage_durations: { stage: string; duration: number | null }[];
+  bottleneck: ReturnType<typeof pickBottleneck>;
+  rejectCount: number;
+  reassignCount: number;
+}
+
+function analyzeAssignmentEvents<T extends AssignmentEvent, R extends Record<string, any>>(
+  events: T[],
+  getMetadata?: (sortedEvents: T[]) => R
+): AssignmentAnalysisResult & R {
   const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
 
-  const leader = sorted[0]?.section?.divisionLeader;
-  const division = leader ? toDiv(leader.dcategory) : 'NoDivision';
-  const leaderName = leader ? `${leader.firstName} ${leader.lastName}` : null;
+  const metadata = getMetadata ? getMetadata(sorted) : {} as R;
 
   // Stage 1: assign_to_request — first type=0 → first type=1 after it
   const assignEvent = sorted.find((e) => e.type === 0);
@@ -139,55 +152,37 @@ export function analyzeSection(events: SectionHistory[]) {
   ];
 
   return {
-    division,
-    leaderName,
+    ...metadata,
     stage_durations: stages,
     bottleneck: pickBottleneck(stages),
     rejectCount,
     reassignCount,
+  } as AssignmentAnalysisResult & R;
+}
+
+// ─── Section analysis ─────────────────────────────────────────────────────────
+
+export function analyzeSection(events: SectionHistory[]) {
+  const getMetadata = (sorted: SectionHistory[]) => {
+    const leader = sorted[0]?.section?.divisionLeader;
+    return {
+      division: leader ? toDiv(leader.dcategory) : 'NoDivision',
+      leaderName: leader ? `${leader.firstName} ${leader.lastName}` : null,
+    };
   };
+
+  return analyzeAssignmentEvents(events, getMetadata);
 }
 
 // ─── Clause analysis ──────────────────────────────────────────────────────────
 
 export function analyzeClause(events: ClauseHistory[]) {
-  const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
-
-  const member = sorted[0]?.clause?.divisionMember;
-  const memberName = member ? `${member.firstName} ${member.lastName}` : null;
-
-  // Stage 1: assign_to_request — first type=0 → first type=1 after it
-  const assignEvent = sorted.find((e) => e.type === 0);
-  const requestAfterAssign = assignEvent
-    ? sorted.find((e) => e.type === 1 && parseInt(e.date) > parseInt(assignEvent.date))
-    : null;
-  const assignToRequest =
-    assignEvent && requestAfterAssign
-      ? parseInt(requestAfterAssign.date) - parseInt(assignEvent.date)
-      : null;
-
-  // Stage 2: request_to_approve — first type=1 → last type=2
-  const firstRequest = sorted.find((e) => e.type === 1);
-  const lastApprove = [...sorted].reverse().find((e) => e.type === 2);
-  const requestToApprove =
-    firstRequest && lastApprove && parseInt(lastApprove.date) > parseInt(firstRequest.date)
-      ? parseInt(lastApprove.date) - parseInt(firstRequest.date)
-      : null;
-
-  // Reject & reassign counts
-  const rejectCount = sorted.filter((e) => e.type === 3).length;
-  const reassignCount = sorted.filter((e) => e.type === 4).length;
-
-  const stages = [
-    { stage: 'assign_to_request', duration: assignToRequest },
-    { stage: 'request_to_approve', duration: requestToApprove },
-  ];
-
-  return {
-    memberName,
-    stage_durations: stages,
-    bottleneck: pickBottleneck(stages),
-    rejectCount,
-    reassignCount,
+  const getMetadata = (sorted: ClauseHistory[]) => {
+    const member = sorted[0]?.clause?.divisionMember;
+    return {
+      memberName: member ? `${member.firstName} ${member.lastName}` : null,
+    };
   };
+
+  return analyzeAssignmentEvents(events, getMetadata);
 }

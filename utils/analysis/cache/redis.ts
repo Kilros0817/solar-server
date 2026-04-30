@@ -20,6 +20,14 @@ export const getSubgraphDataCacheKey = (): string => {
 };
 
 /**
+ * Helper function to generate hash from data
+ */
+const generateDataHash = (data: SubgraphData): string => {
+  const dataString = JSON.stringify(data);
+  return crypto.createHash('sha256').update(dataString).digest('hex');
+};
+
+/**
  * Helper function to get subgraph data with caching
  */
 export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; hash: string } | null> => {
@@ -41,10 +49,8 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
     }
 
     // Cache the raw data
-    const dataString = JSON.stringify(raw);
-    const dataHash = crypto.createHash('sha256').update(dataString).digest('hex');
-
-    await redis.setEx(getSubgraphDataCacheKey(), REPORT_CACHE_TTL_SECONDS, dataString);
+    const dataHash = generateDataHash(raw);
+    await redis.setEx(getSubgraphDataCacheKey(), REPORT_CACHE_TTL_SECONDS, JSON.stringify(raw));
 
     return { data: raw, hash: dataHash };
   } catch (error) {
@@ -53,8 +59,7 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
     if (!raw) {
       return null;
     }
-    const dataString = JSON.stringify(raw);
-    const dataHash = crypto.createHash('sha256').update(dataString).digest('hex');
+    const dataHash = generateDataHash(raw);
     return { data: raw, hash: dataHash };
   }
 };

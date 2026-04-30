@@ -73,11 +73,9 @@ function analyzeDocument(events) {
         rejectCount,
     };
 }
-function analyzeSection(events) {
+function analyzeAssignmentEvents(events, getMetadata) {
     const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
-    const leader = sorted[0]?.section?.divisionLeader;
-    const division = leader ? (0, types_1.toDiv)(leader.dcategory) : 'NoDivision';
-    const leaderName = leader ? `${leader.firstName} ${leader.lastName}` : null;
+    const metadata = getMetadata ? getMetadata(sorted) : {};
     const assignEvent = sorted.find((e) => e.type === 0);
     const requestAfterAssign = assignEvent
         ? sorted.find((e) => e.type === 1 && parseInt(e.date) > parseInt(assignEvent.date))
@@ -97,41 +95,29 @@ function analyzeSection(events) {
         { stage: 'request_to_approve', duration: requestToApprove },
     ];
     return {
-        division,
-        leaderName,
+        ...metadata,
         stage_durations: stages,
         bottleneck: pickBottleneck(stages),
         rejectCount,
         reassignCount,
     };
 }
-function analyzeClause(events) {
-    const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
-    const member = sorted[0]?.clause?.divisionMember;
-    const memberName = member ? `${member.firstName} ${member.lastName}` : null;
-    const assignEvent = sorted.find((e) => e.type === 0);
-    const requestAfterAssign = assignEvent
-        ? sorted.find((e) => e.type === 1 && parseInt(e.date) > parseInt(assignEvent.date))
-        : null;
-    const assignToRequest = assignEvent && requestAfterAssign
-        ? parseInt(requestAfterAssign.date) - parseInt(assignEvent.date)
-        : null;
-    const firstRequest = sorted.find((e) => e.type === 1);
-    const lastApprove = [...sorted].reverse().find((e) => e.type === 2);
-    const requestToApprove = firstRequest && lastApprove && parseInt(lastApprove.date) > parseInt(firstRequest.date)
-        ? parseInt(lastApprove.date) - parseInt(firstRequest.date)
-        : null;
-    const rejectCount = sorted.filter((e) => e.type === 3).length;
-    const reassignCount = sorted.filter((e) => e.type === 4).length;
-    const stages = [
-        { stage: 'assign_to_request', duration: assignToRequest },
-        { stage: 'request_to_approve', duration: requestToApprove },
-    ];
-    return {
-        memberName,
-        stage_durations: stages,
-        bottleneck: pickBottleneck(stages),
-        rejectCount,
-        reassignCount,
+function analyzeSection(events) {
+    const getMetadata = (sorted) => {
+        const leader = sorted[0]?.section?.divisionLeader;
+        return {
+            division: leader ? (0, types_1.toDiv)(leader.dcategory) : 'NoDivision',
+            leaderName: leader ? `${leader.firstName} ${leader.lastName}` : null,
+        };
     };
+    return analyzeAssignmentEvents(events, getMetadata);
+}
+function analyzeClause(events) {
+    const getMetadata = (sorted) => {
+        const member = sorted[0]?.clause?.divisionMember;
+        return {
+            memberName: member ? `${member.firstName} ${member.lastName}` : null,
+        };
+    };
+    return analyzeAssignmentEvents(events, getMetadata);
 }

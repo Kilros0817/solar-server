@@ -1,5 +1,32 @@
 import puppeteer from 'puppeteer';
 
+// PDF configuration constants
+const PDF_CONFIG = {
+  format: 'A4' as const,
+  margin: {
+    top: '50px',
+    right: '50px',
+    bottom: '50px',
+    left: '50px',
+  },
+  printBackground: true,
+  displayHeaderFooter: true,
+};
+
+/**
+ * Get header template for PDF
+ */
+function getHeaderTemplate(): string {
+  return '<div style="font-size: 10px; margin: 0 auto; text-align: center; width: 100%;">Solar DMS Analytics Report</div>';
+}
+
+/**
+ * Get footer template for PDF
+ */
+function getFooterTemplate(): string {
+  return `<div style="font-size: 8px; margin: 0 auto; text-align: center; width: 100%;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated: ${new Date().toLocaleDateString()}</div>`;
+}
+
 /**
  * Helper function to convert HTML to PDF using Puppeteer
  */
@@ -21,17 +48,9 @@ export const generatePDFFromHTML = async (htmlContent: string): Promise<Buffer> 
     
     // Generate PDF
     const pdfUint8Array = await page.pdf({
-      format: 'A4',
-      margin: {
-        top: '50px',
-        right: '50px',
-        bottom: '50px',
-        left: '50px',
-      },
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<div style="font-size: 10px; margin: 0 auto; text-align: center; width: 100%;">Solar DMS Analytics Report</div>',
-      footerTemplate: '<div style="font-size: 8px; margin: 0 auto; text-align: center; width: 100%;">Page <span class="pageNumber"></span> of <span class="totalPages"></span> | Generated: ' + new Date().toLocaleDateString() + '</div>',
+      ...PDF_CONFIG,
+      headerTemplate: getHeaderTemplate(),
+      footerTemplate: getFooterTemplate(),
     });
     
     // Convert Uint8Array to Buffer
