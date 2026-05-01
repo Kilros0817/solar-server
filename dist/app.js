@@ -8,7 +8,6 @@ const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
 const mongoose_1 = __importDefault(require("mongoose"));
-dotenv_1.default.config();
 const api_1 = __importDefault(require("./routes/api"));
 const clause_1 = __importDefault(require("./routes/clause"));
 const section_1 = __importDefault(require("./routes/section"));
@@ -17,6 +16,7 @@ const upload_1 = __importDefault(require("./routes/upload"));
 const subgraph_1 = __importDefault(require("./routes/subgraph"));
 const support_1 = __importDefault(require("./routes/support"));
 const analysis_1 = __importDefault(require("./routes/analysis"));
+dotenv_1.default.config();
 const app = (0, express_1.default)();
 const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComponent(process.env.PASSWORD)}@cluster0.dwfddsb.mongodb.net/solar?retryWrites=true&w=majority`;
 mongoose_1.default.connect(connectionString, {}).then(() => {

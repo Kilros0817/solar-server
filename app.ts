@@ -4,9 +4,6 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import mongoose from 'mongoose';
 
-// Load env vars before anything else (matters for local dev)
-dotenv.config();
-
 // Import routes
 import apiRouter from './routes/api';
 import clauseRouter from './routes/clause';
@@ -17,6 +14,7 @@ import subgraphRouter from './routes/subgraph';
 import supportRouter from './routes/support';
 import analysisRouter from './routes/analysis';
 
+dotenv.config();
 // Create express app
 const app = express();
 

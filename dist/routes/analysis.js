@@ -6,12 +6,20 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const openai_1 = __importDefault(require("openai"));
 const dotenv_1 = __importDefault(require("dotenv"));
+const undici_1 = require("undici");
 const analysis_1 = require("../utils/analysis");
 dotenv_1.default.config();
 const router = express_1.default.Router();
-console.log("API KEY EXISTS:", !!process.env.OPENAI_API_KEY);
+const proxyAgent = process.env.API_PROXY
+    ? new undici_1.ProxyAgent(process.env.API_PROXY)
+    : null;
 const openai = new openai_1.default({
-    apiKey: process.env.OPENAI_API_KEY
+    apiKey: process.env.OPENAI_API_KEY,
+    fetch: (url, options) => {
+        if (!proxyAgent)
+            return fetch(url, options);
+        return fetch(url, { ...options, dispatcher: proxyAgent });
+    },
 });
 function formatDuration(seconds) {
     if (seconds === null)
@@ -151,13 +159,13 @@ router.get('/download-report', async (_req, res) => {
         }
         const { report } = result;
         const prompt = generateOpenAIPrompt(report);
-        if (!process.env.OPENAI_API_KEY) {
-            throw new Error('OPENAI_API_KEY is not set');
+        if (!openai) {
+            throw new Error('OpenAI client not initialized');
         }
         let completion;
         try {
             completion = await openai.chat.completions.create({
-                model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
+                model: process.env.OPENAI_MODEL || 'gpt-4',
                 messages: [
                     {
                         role: 'system',
@@ -169,7 +177,7 @@ router.get('/download-report', async (_req, res) => {
                     }
                 ],
                 temperature: 0.3,
-                max_tokens: 2000
+                max_tokens: 4000
             });
         }
         catch (openaiError) {
