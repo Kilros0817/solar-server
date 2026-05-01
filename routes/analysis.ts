@@ -12,8 +12,6 @@ dotenv.config();
 
 const router = express.Router();
 
-console.log("API KEY EXISTS:", !!process.env.OPENAI_API_KEY);
-
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 });
