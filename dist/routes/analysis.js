@@ -6,20 +6,11 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const openai_1 = __importDefault(require("openai"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const undici_1 = require("undici");
 const analysis_1 = require("../utils/analysis");
 dotenv_1.default.config();
 const router = express_1.default.Router();
-const proxyAgent = process.env.API_PROXY
-    ? new undici_1.ProxyAgent(process.env.API_PROXY)
-    : null;
 const openai = new openai_1.default({
-    apiKey: process.env.OPENAI_API_KEY,
-    fetch: (url, options) => {
-        if (!proxyAgent)
-            return fetch(url, options);
-        return fetch(url, { ...options, dispatcher: proxyAgent });
-    },
+    apiKey: process.env.OPENAI_API_KEY
 });
 function formatDuration(seconds) {
     if (seconds === null)
