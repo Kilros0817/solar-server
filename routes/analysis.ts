@@ -2,10 +2,10 @@ import express, { Request, Response } from 'express';
 import OpenAI from 'openai';
 import dotenv from 'dotenv';
 import { ProxyAgent } from 'undici';
-import { 
-  getOrBuildReport, 
-  generatePDFFromHTML, 
-  markdownToHTML 
+import {
+  getOrBuildReport,
+  generatePDFFromHTML,
+  markdownToHTML
 } from '../utils/analysis';
 import { AnalysisReport } from '../utils/analysis/core/types';
 
@@ -17,6 +17,8 @@ const router = express.Router();
 const proxyAgent = process.env.API_PROXY
   ? new ProxyAgent(process.env.API_PROXY)
   : null;
+
+console.log("API KEY EXISTS:", !!process.env.OPENAI_API_KEY);
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -125,7 +127,7 @@ async function generateFallbackReport(error: unknown): Promise<{ pdfBuffer: Buff
   }
 
   const { report } = result;
-  
+
   // Build division details for fallback report
   const divisionDetails = Object.entries(report.division_rollup)
     .map(([division, stats]) => {
@@ -156,11 +158,11 @@ OpenAI report generation failed. This is a basic report.
 Error: ${typeof error === 'string' ? error.substring(0, 200) : String(error).substring(0, 200)}
 
 Generated: ${new Date().toLocaleString()}`;
-  
+
   // Convert markdown to HTML and generate PDF
   const htmlContent = markdownToHTML(basicReport);
   const pdfBuffer = await generatePDFFromHTML(htmlContent);
-  
+
   return {
     pdfBuffer,
     filename: `analytics-report-basic-${Date.now()}.pdf`
@@ -240,7 +242,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     }
 
     const reportContent = completion.choices[0].message.content;
-    
+
     if (!reportContent) {
       throw new Error('OpenAI API returned empty response content');
     }
@@ -253,35 +255,35 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
 
     // Generate PDF from HTML content
     const pdfBuffer = await generatePDFFromHTML(cleanedContent);
-    
+
     // Set PDF headers
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', `attachment; filename="analytics-report-${Date.now()}.pdf"`);
     res.setHeader('Content-Length', pdfBuffer.length.toString());
-    
+
     res.send(pdfBuffer);
 
   } catch (error) {
     console.error('Download report error:', error);
-    
+
     // Try to provide a fallback basic report if OpenAI fails
     try {
       const fallbackResult = await generateFallbackReport(error);
       if (fallbackResult) {
         const { pdfBuffer, filename } = fallbackResult;
-        
+
         // Set PDF headers for fallback
         res.setHeader('Content-Type', 'application/pdf');
         res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
         res.setHeader('Content-Length', pdfBuffer.length.toString());
-        
+
         res.send(pdfBuffer);
         return;
       }
     } catch (fallbackError) {
       console.error('Fallback report generation also failed:', fallbackError);
     }
-    
+
     res.status(500).json({
       isSuccess: false,
       error: String(error),
