@@ -7,9 +7,9 @@ export function buildReport(data: SubgraphData): AnalysisReport {
   const { docHistories, sectionHistories, clauseHistories } = data;
 
   // Create maps once
-  const docMap = groupBy(docHistories, (e) => e.document.id);
-  const sectionMap = groupBy(sectionHistories, (e) => e.section.id);
-  const clauseMap = groupBy(clauseHistories ?? [], (e) => e.clause.id);
+  const docMap = groupBy(docHistories, (e) => e.doc_id);
+  const sectionMap = groupBy(sectionHistories, (e) => e.section_id);
+  const clauseMap = groupBy(clauseHistories ?? [], (e) => e.clause_id);
 
   const totalWorkflows = docMap.size;
   let completedWorkflows = 0;
@@ -19,32 +19,32 @@ export function buildReport(data: SubgraphData): AnalysisReport {
 
   // Process only completed documents
   const documents = Array.from(docMap.entries())
-    .filter(([, events]) => events.some((e) => e.docStatus === 4))
+    .filter(([, events]) => events.some((e) => e.doc_status === 4))
     .map(([docId, events]) => {
       const docAnalysis = analyzeDocument(events);
 
       if (docAnalysis.isCompleted) {
         completedWorkflows++;
         if (docAnalysis.cycleTime !== null) cycleTimes.push(docAnalysis.cycleTime);
-        const esignEvent = events.find((e) => e.docStatus === 4);
+        const esignEvent = events.find((e) => e.doc_status === 4);
         if (esignEvent) {
           completedDocMeta.push({ 
             cycleTime: docAnalysis.cycleTime, 
-            esignDate: parseInt(esignEvent.date) 
+            esignDate: esignEvent.date 
           });
         }
       }
 
       // Process sections for this document
       const docSections = Array.from(sectionMap.entries())
-        .filter(([, sEvents]) => sEvents[0]?.section?.doc?.id === docId)
+        .filter(([, sEvents]) => sEvents[0]?.doc_id === docId)
         .map(([sectionId, sEvents]) => {
           const sResult = analyzeSection(sEvents);
           allSectionResults.push(sResult);
 
           // Process clauses for this section
           const sectionClauses = Array.from(clauseMap.entries())
-            .filter(([, cEvents]) => cEvents[0]?.clause?.section?.id === sectionId)
+            .filter(([, cEvents]) => cEvents[0]?.section_id === sectionId)
             .map(([clauseId, cEvents]) => {
               const clauseAnalysis = analyzeClause(cEvents);
               return {

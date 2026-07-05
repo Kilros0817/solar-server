@@ -1,6 +1,7 @@
 import crypto from 'crypto';
-import { getRedisClient, querySubgraph } from '../../../routes/subgraph';
-import { SubgraphData, HISTORIES_QUERY } from '../core/types';
+import { getRedisClient } from '../../../routes/postgres';
+import { pool } from '../../../utils/database';
+import { SubgraphData } from '../core/types';
 
 // Cache TTL for report data (10 minutes)
 export const REPORT_CACHE_TTL_SECONDS = 600;
@@ -13,10 +14,10 @@ export const getReportCacheKey = (dataHash: string): string => {
 };
 
 /**
- * Helper function to get cache key for subgraph data
+ * Helper function to get cache key for postgres data
  */
 export const getSubgraphDataCacheKey = (): string => {
-  return 'analysis:subgraph:data';
+  return 'analysis:postgres:data';
 };
 
 /**
@@ -28,13 +29,13 @@ const generateDataHash = (data: SubgraphData): string => {
 };
 
 /**
- * Helper function to get subgraph data with caching
+ * Helper function to get postgres data with caching
  */
 export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; hash: string } | null> => {
   try {
     const redis = await getRedisClient();
 
-    // First, try to get cached subgraph data
+    // First, try to get cached postgres data
     const cachedData = await redis.get(getSubgraphDataCacheKey());
     if (cachedData) {
       const parsedData = JSON.parse(cachedData);
@@ -42,11 +43,18 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
       return { data: parsedData, hash: dataHash };
     }
 
-    // If no cache, fetch from subgraph
-    const raw = await querySubgraph(HISTORIES_QUERY) as SubgraphData;
-    if (!raw) {
-      return null;
-    }
+    // If no cache, fetch from postgres
+    const [docHistories, sectionHistories, clauseHistories] = await Promise.all([
+      pool.query('SELECT type, doc_status, date, doc_id FROM doc_histories ORDER BY date'),
+      pool.query('SELECT date, section_status, type, section_id, doc_id, division_leader FROM section_histories ORDER BY date'),
+      pool.query('SELECT type, date, clause_status, clause_id, section_id, division_member FROM clause_histories ORDER BY date')
+    ]);
+
+    const raw: SubgraphData = {
+      docHistories: docHistories.rows,
+      sectionHistories: sectionHistories.rows,
+      clauseHistories: clauseHistories.rows
+    };
 
     // Cache the raw data
     const dataHash = generateDataHash(raw);
@@ -55,11 +63,25 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
     return { data: raw, hash: dataHash };
   } catch (error) {
     console.warn('Redis cache error, fetching fresh data:', error);
-    const raw = await querySubgraph(HISTORIES_QUERY) as SubgraphData;
-    if (!raw) {
+    
+    try {
+      const [docHistories, sectionHistories, clauseHistories] = await Promise.all([
+        pool.query('SELECT type, doc_status, date, doc_id FROM doc_histories ORDER BY date'),
+        pool.query('SELECT date, section_status, type, section_id, doc_id, division_leader FROM section_histories ORDER BY date'),
+        pool.query('SELECT type, date, clause_status, clause_id, section_id, division_member FROM clause_histories ORDER BY date')
+      ]);
+
+      const raw: SubgraphData = {
+        docHistories: docHistories.rows,
+        sectionHistories: sectionHistories.rows,
+        clauseHistories: clauseHistories.rows
+      };
+      
+      const dataHash = generateDataHash(raw);
+      return { data: raw, hash: dataHash };
+    } catch (postgresError) {
+      console.error('PostgreSQL query error:', postgresError);
       return null;
     }
-    const dataHash = generateDataHash(raw);
-    return { data: raw, hash: dataHash };
   }
 };

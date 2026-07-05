@@ -160,7 +160,7 @@ Generated: ${new Date().toLocaleString()}`;
 
 /**
  * GET /analysis/report
- * Fetches docHistories + sectionHistories from subgraph and returns a
+ * Fetches docHistories + sectionHistories from PostgreSQL and returns a
  * computed workflow analytics report — no AI involved.
  * Now with caching!
  */
@@ -169,7 +169,7 @@ router.get('/report', async (_req: Request, res: Response): Promise<void> => {
     const result = await getOrBuildReport();
 
     if (!result) {
-      res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from subgraph' });
+      res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from PostgreSQL' });
       return;
     }
 
@@ -190,7 +190,7 @@ router.get('/download-report', async (_req: Request, res: Response): Promise<voi
     const result = await getOrBuildReport();
 
     if (!result) {
-      res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from subgraph' });
+      res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from PostgreSQL' });
       return;
     }
 

@@ -1,83 +1,28 @@
-// ─── Subgraph query ───────────────────────────────────────────────────────────
-
-export const HISTORIES_QUERY = `{
-  docHistories(orderBy: date) {
-    type
-    docStatus
-    date
-    document {
-      id
-    }
-  }
-  sectionHistories(orderBy: date) {
-    date
-    sectionStatus
-    type
-    section {
-      doc {
-        id
-      }
-      id
-      divisionLeader {
-        firstName
-        lastName
-        dcategory
-      }
-    }
-  }
-  clauseHistories(orderBy: date) {
-    type
-    date
-    clauseStatus
-    clause {
-      id
-      section {
-        id
-      }
-      divisionMember {
-        firstName
-        lastName
-      }
-    }
-  }
-}`;
-
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface DocHistory {
   type: number;
-  docStatus: number;
-  date: string;
-  document: { id: string };
+  doc_status: number;
+  date: number;
+  doc_id: string;
 }
 
 export interface SectionHistory {
-  date: string;
-  sectionStatus: number;
+  date: number;
+  section_status: number;
   type: number;
-  section: {
-    id: string;
-    doc: { id: string };
-    divisionLeader: {
-      firstName: string;
-      lastName: string;
-      dcategory: number;
-    } | null;
-  };
+  section_id: string;
+  doc_id: string;
+  division_leader: string | null;
 }
 
 export interface ClauseHistory {
   type: number;
-  date: string;
-  clauseStatus: number;
-  clause: {
-    id: string;
-    section: { id: string };
-    divisionMember: {
-      firstName: string;
-      lastName: string;
-    } | null;
-  };
+  date: number;
+  clause_status: number;
+  clause_id: string;
+  section_id: string;
+  division_member: string | null;
 }
 
 export interface SubgraphData {

@@ -10,7 +10,7 @@ import clauseRouter from './routes/clause';
 import sectionRouter from './routes/section';
 import contractRouter from './routes/contract';
 import uploadRouter from './routes/upload';
-import subgraphRouter from './routes/subgraph';
+import postgresRouter from './routes/postgres';
 import supportRouter from './routes/support';
 import analysisRouter from './routes/analysis';
 
@@ -44,7 +44,7 @@ app
   .use("/contract", contractRouter)
   .use("/upload", uploadRouter)
   .use("/support", supportRouter)
-  .use("/subgraph", subgraphRouter)
+  .use("/postgres", postgresRouter)
   .use("/analysis", analysisRouter)
 
 
