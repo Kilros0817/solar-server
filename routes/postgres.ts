@@ -67,7 +67,7 @@ export const queryPostgres = async (sql: string, params: unknown[] = [], bypassC
   return data;
 };
 
-// GET /subgraph/documents - Get all documents
+// GET /postgres/documents - Get all documents
 router.get('/documents', async (req: Request, res: Response): Promise<void> => {
   try {
     const { client, status, category, page = '1', limit = '50' } = req.query;
@@ -102,12 +102,12 @@ router.get('/documents', async (req: Request, res: Response): Promise<void> => {
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/documents error:', error);
+    console.error('GET /postgres/documents error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/documents/:id - Get single document
+// GET /postgres/documents/:id - Get single document
 router.get('/documents/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -120,12 +120,12 @@ router.get('/documents/:id', async (req: Request, res: Response): Promise<void> 
 
     res.json({ isSuccess: true, data: result.rows[0] });
   } catch (error) {
-    console.error('GET /subgraph/documents/:id error:', error);
+    console.error('GET /postgres/documents/:id error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/sections - Get all sections
+// GET /postgres/sections - Get all sections
 router.get('/sections', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, status, page = '1', limit = '50' } = req.query;
@@ -156,12 +156,12 @@ router.get('/sections', async (req: Request, res: Response): Promise<void> => {
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/sections error:', error);
+    console.error('GET /postgres/sections error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/sections/:id - Get single section
+// GET /postgres/sections/:id - Get single section
 router.get('/sections/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -174,12 +174,12 @@ router.get('/sections/:id', async (req: Request, res: Response): Promise<void> =
 
     res.json({ isSuccess: true, data: result.rows[0] });
   } catch (error) {
-    console.error('GET /subgraph/sections/:id error:', error);
+    console.error('GET /postgres/sections/:id error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/clauses - Get all clauses
+// GET /postgres/clauses - Get all clauses
 router.get('/clauses', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, status, page = '1', limit = '50' } = req.query;
@@ -210,12 +210,12 @@ router.get('/clauses', async (req: Request, res: Response): Promise<void> => {
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/clauses error:', error);
+    console.error('GET /postgres/clauses error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/clauses/:id - Get single clause
+// GET /postgres/clauses/:id - Get single clause
 router.get('/clauses/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
@@ -228,12 +228,12 @@ router.get('/clauses/:id', async (req: Request, res: Response): Promise<void> =>
 
     res.json({ isSuccess: true, data: result.rows[0] });
   } catch (error) {
-    console.error('GET /subgraph/clauses/:id error:', error);
+    console.error('GET /postgres/clauses/:id error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/doc-histories - Get document histories
+// GET /postgres/doc-histories - Get document histories
 router.get('/doc-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, page = '1', limit = '50' } = req.query;
@@ -260,12 +260,12 @@ router.get('/doc-histories', async (req: Request, res: Response): Promise<void> 
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/doc-histories error:', error);
+    console.error('GET /postgres/doc-histories error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/section-histories - Get section histories
+// GET /postgres/section-histories - Get section histories
 router.get('/section-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, page = '1', limit = '50' } = req.query;
@@ -292,12 +292,12 @@ router.get('/section-histories', async (req: Request, res: Response): Promise<vo
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/section-histories error:', error);
+    console.error('GET /postgres/section-histories error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/clause-histories - Get clause histories
+// GET /postgres/clause-histories - Get clause histories
 router.get('/clause-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { clauseId, page = '1', limit = '50' } = req.query;
@@ -324,12 +324,12 @@ router.get('/clause-histories', async (req: Request, res: Response): Promise<voi
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/clause-histories error:', error);
+    console.error('GET /postgres/clause-histories error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/users/:address - Get user by address
+// GET /postgres/users/:address - Get user by address
 router.get('/users/:address', async (req: Request, res: Response): Promise<void> => {
   try {
     const { address } = req.params;
@@ -351,12 +351,12 @@ router.get('/users/:address', async (req: Request, res: Response): Promise<void>
       onPending: user.on_pending
     }});
   } catch (error) {
-    console.error('GET /subgraph/users/:address error:', error);
+    console.error('GET /postgres/users/:address error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/users - Get users with filters
+// GET /postgres/users - Get users with filters
 router.get('/users', async (req: Request, res: Response): Promise<void> => {
   try {
     const { role, dcategory, onPending, page = '1', limit = '50' } = req.query;
@@ -400,12 +400,12 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
 
     res.json({ isSuccess: true, data: users, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/users error:', error);
+    console.error('GET /postgres/users error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/documents-full - Get documents with nested relations
+// GET /postgres/documents-full - Get documents with nested relations
 router.get('/documents-full', async (req: Request, res: Response): Promise<void> => {
   try {
     const { client, status, category, page = '1', limit = '50' } = req.query;
@@ -414,10 +414,11 @@ router.get('/documents-full', async (req: Request, res: Response): Promise<void>
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
 
-    let sql = `SELECT d.*, 
-      u.address as client_id, u.first_name as client_first_name, u.last_name as client_last_name, u.email as client_email
-      FROM documents d 
-      LEFT JOIN users u ON d.client = u.address 
+    let sql = `SELECT d.*,
+      u.address as client_id, u.first_name as client_first_name, u.last_name as client_last_name, u.email as client_email,
+      (SELECT COUNT(*) FROM sections s WHERE s.doc_id = d.id) as section_count
+      FROM documents d
+      LEFT JOIN users u ON d.client = u.address
       WHERE 1=1`;
     const params: unknown[] = [];
     let paramIndex = 1;
@@ -454,27 +455,28 @@ router.get('/documents-full', async (req: Request, res: Response): Promise<void>
       cid: doc.cid,
       status: doc.status,
       reject_reason: doc.reject_reason,
-      created_at: doc.created_at
+      created_at: doc.created_at,
+      section_count: doc.section_count || 0
     }));
 
     res.json({ isSuccess: true, data: documents, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/documents-full error:', error);
+    console.error('GET /postgres/documents-full error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/documents-full/:id - Get single document with nested relations
+// GET /postgres/documents-full/:id - Get single document with nested relations
 router.get('/documents-full/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
     
     const docResult = await pool.query(
-      `SELECT d.*, 
+      `SELECT d.*,
         u.address as client_id, u.first_name as client_first_name, u.last_name as client_last_name, u.email as client_email
-      FROM documents d 
-      LEFT JOIN users u ON d.client = u.address 
-      WHERE d.id = $1`, 
+      FROM documents d
+      LEFT JOIN users u ON d.client = u.address
+      WHERE d.id = $1`,
       [id]
     );
     
@@ -535,8 +537,8 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
     }));
 
     // Get esigns
-    const clientEsign = doc.client_esign_id ? await pool.query('SELECT * FROM esigns WHERE id = $1', [doc.client_esign_id]) : null;
-    const legalEsign = doc.legal_esign_id ? await pool.query('SELECT * FROM esigns WHERE id = $1', [doc.legal_esign_id]) : null;
+    const clientEsign = doc.client_esign_id ? await pool.query('SELECT * FROM esigns WHERE subgraph_id = $1', [doc.client_esign_id]) : null;
+    const legalEsign = doc.legal_esign_id ? await pool.query('SELECT * FROM esigns WHERE subgraph_id = $1', [doc.legal_esign_id]) : null;
 
     res.json({ isSuccess: true, data: {
       id: doc.id,
@@ -557,12 +559,12 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
       legal_e_sign: legalEsign?.rows[0] || null
     }});
   } catch (error) {
-    console.error('GET /subgraph/documents-full/:id error:', error);
+    console.error('GET /postgres/documents-full/:id error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/sections-full - Get sections with nested relations
+// GET /postgres/sections-full - Get sections with nested relations
 router.get('/sections-full', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, divisionLeader, status, page = '1', limit = '50' } = req.query;
@@ -654,12 +656,12 @@ router.get('/sections-full', async (req: Request, res: Response): Promise<void> 
 
     res.json({ isSuccess: true, data: sections, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/sections-full error:', error);
+    console.error('GET /postgres/sections-full error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });
 
-// GET /subgraph/clauses-full - Get clauses with nested relations
+// GET /postgres/clauses-full - Get clauses with nested relations
 router.get('/clauses-full', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, divisionMember, status, page = '1', limit = '50' } = req.query;
@@ -732,7 +734,7 @@ router.get('/clauses-full', async (req: Request, res: Response): Promise<void> =
 
     res.json({ isSuccess: true, data: clauses, page: pageNum, limit: limitNum, total });
   } catch (error) {
-    console.error('GET /subgraph/clauses-full error:', error);
+    console.error('GET /postgres/clauses-full error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
   }
 });

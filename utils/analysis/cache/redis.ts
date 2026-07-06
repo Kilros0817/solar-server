@@ -46,8 +46,8 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
     // If no cache, fetch from postgres
     const [docHistories, sectionHistories, clauseHistories] = await Promise.all([
       pool.query('SELECT type, doc_status, date, doc_id FROM doc_histories ORDER BY date'),
-      pool.query('SELECT date, section_status, type, section_id, doc_id, division_leader FROM section_histories ORDER BY date'),
-      pool.query('SELECT type, date, clause_status, clause_id, section_id, division_member FROM clause_histories ORDER BY date')
+      pool.query('SELECT date, section_status, type, section_id FROM section_histories ORDER BY date'),
+      pool.query('SELECT type, date, clause_status, clause_id FROM clause_histories ORDER BY date')
     ]);
 
     const raw: SubgraphData = {
@@ -67,8 +67,8 @@ export const getSubgraphDataWithCache = async (): Promise<{ data: SubgraphData; 
     try {
       const [docHistories, sectionHistories, clauseHistories] = await Promise.all([
         pool.query('SELECT type, doc_status, date, doc_id FROM doc_histories ORDER BY date'),
-        pool.query('SELECT date, section_status, type, section_id, doc_id, division_leader FROM section_histories ORDER BY date'),
-        pool.query('SELECT type, date, clause_status, clause_id, section_id, division_member FROM clause_histories ORDER BY date')
+        pool.query('SELECT date, section_status, type, section_id FROM section_histories ORDER BY date'),
+        pool.query('SELECT type, date, clause_status, clause_id FROM clause_histories ORDER BY date')
       ]);
 
       const raw: SubgraphData = {
