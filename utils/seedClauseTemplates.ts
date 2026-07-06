@@ -128,22 +128,29 @@ const seedClauseTemplates: (Omit<ClauseTemplateAttrs, 'content'> & { content: st
 export async function ensureClauseTemplatesSeeded(): Promise<void> {
   if (seedClauseTemplates.length === 0) return;
 
-  await ClauseTemplate.bulkWrite(
-    seedClauseTemplates.map((t) => ({
-      updateOne: {
-        filter: { templateId: t.templateId },
-        update: {
+  for (const template of seedClauseTemplates) {
+    const existing = await ClauseTemplate.findOne({ templateId: template.templateId });
+    if (existing) {
+      await ClauseTemplate.findOneAndUpdate(
+        { templateId: template.templateId },
+        {
           $set: {
-            name: t.name,
-            description: t.description,
-            content: plainTextToLexicalJson(t.content),
-            category: t.category,
+            name: template.name,
+            description: template.description,
+            content: plainTextToLexicalJson(template.content),
+            category: template.category,
           },
         },
-        upsert: true,
-      },
-    }))
-  );
+        { new: true }
+      );
+    } else {
+      await ClauseTemplate.create({
+        templateId: template.templateId,
+        name: template.name,
+        description: template.description,
+        content: plainTextToLexicalJson(template.content),
+        category: template.category,
+      });
+    }
+  }
 }
-
-

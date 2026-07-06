@@ -181,21 +181,31 @@ const seedSectionTemplates: SectionTemplateAttrs[] = [
 export async function ensureSectionTemplatesSeeded(): Promise<void> {
   if (seedSectionTemplates.length === 0) return;
 
-  await SectionTemplate.bulkWrite(
-    seedSectionTemplates.map((t) => ({
-      updateOne: {
-        filter: { templateId: t.templateId },
-        update: {
+  for (const template of seedSectionTemplates) {
+    const existing = await SectionTemplate.findOne({ templateId: template.templateId });
+    if (existing) {
+      await SectionTemplate.findOneAndUpdate(
+        { templateId: template.templateId },
+        {
           $set: {
-            sectionName: t.sectionName,
-            name: t.name,
-            description: t.description,
-            category: t.category,
-            clauseIds: t.clauseIds,
+            sectionName: template.sectionName,
+            name: template.name,
+            description: template.description,
+            category: template.category,
+            clauseIds: template.clauseIds,
           },
         },
-        upsert: true,
-      },
-    }))
-  );
+        { new: true }
+      );
+    } else {
+      await SectionTemplate.create({
+        templateId: template.templateId,
+        sectionName: template.sectionName,
+        name: template.name,
+        description: template.description,
+        category: template.category,
+        clauseIds: template.clauseIds,
+      });
+    }
+  }
 }

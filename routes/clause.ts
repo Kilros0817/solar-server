@@ -14,18 +14,17 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const pageNum = Math.max(1, Number(page ?? '1') || 1);
     const limitNum = Math.min(200, Math.max(1, Number(limit ?? '50') || 50));
-    const skip = (pageNum - 1) * limitNum;
 
     const [items, total] = await Promise.all([
-      ClauseTemplate.find(filter)
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
+      ClauseTemplate.find(filter),
       ClauseTemplate.countDocuments(filter),
     ]);
 
-    res.status(200).json({ items, page: pageNum, limit: limitNum, total });
+    // Apply pagination in memory
+    const skip = (pageNum - 1) * limitNum;
+    const paginatedItems = items.slice(skip, skip + limitNum);
+
+    res.status(200).json({ items: paginatedItems, page: pageNum, limit: limitNum, total });
   } catch (error) {
     console.error('GET /clause error:', error);
     res.status(500).json({ error: 'Failed to fetch clause templates' });
@@ -36,7 +35,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 router.get('/:templateId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { templateId } = req.params;
-    const item = await ClauseTemplate.findOne({ templateId }).lean();
+    const item = await ClauseTemplate.findOne({ templateId });
 
     if (!item) {
       res.status(404).json({ error: 'Clause template not found' });
@@ -68,7 +67,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       category: body.category,
     });
 
-    res.status(201).json({ item: created.toObject() });
+    res.status(201).json({ item: created });
   } catch (error: any) {
     if (error?.code === 11000) {
       res.status(409).json({ error: 'templateId already exists' });
@@ -96,7 +95,7 @@ router.put('/:templateId', async (req: Request, res: Response): Promise<void> =>
         },
       },
       { new: true }
-    ).lean();
+    );
 
     if (!updated) {
       res.status(404).json({ error: 'Clause template not found' });

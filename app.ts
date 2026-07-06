@@ -2,7 +2,7 @@ import express from 'express';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import mongoose from 'mongoose';
+import { pool } from './utils/database';
 
 // Import routes
 import apiRouter from './routes/api';
@@ -18,13 +18,13 @@ dotenv.config();
 // Create express app
 const app = express();
 
-const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComponent(process.env.PASSWORD!)}@cluster0.dwfddsb.mongodb.net/solar?retryWrites=true&w=majority`;
-// Connect to MongoDB Atlas
-mongoose.connect(connectionString, {
-}).then(() => {
-  console.log('Connected to Database');
-}).catch((error) => {
-  console.error('Error connecting to Database:', error);
+// Test PostgreSQL connection
+pool.query('SELECT NOW()', (err, res) => {
+  if (err) {
+    console.error('Error connecting to PostgreSQL:', err);
+  } else {
+    console.log('Connected to PostgreSQL database');
+  }
 });
 
 const corsOptions = {

@@ -30,18 +30,17 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 
     const pageNum = Math.max(1, Number(page ?? '1') || 1);
     const limitNum = Math.min(200, Math.max(1, Number(limit ?? '50') || 50));
-    const skip = (pageNum - 1) * limitNum;
 
     const [rawItems, total] = await Promise.all([
-      ContractTemplate.find(filter)
-        .sort({ name: 1 })
-        .skip(skip)
-        .limit(limitNum)
-        .lean(),
+      ContractTemplate.find(filter),
       ContractTemplate.countDocuments(filter),
     ]);
 
-    const items = rawItems.map((item) => toApiItem(item as unknown as Record<string, unknown>));
+    // Apply pagination in memory (PostgreSQL model doesn't support skip/limit yet)
+    const skip = (pageNum - 1) * limitNum;
+    const paginatedItems = rawItems.slice(skip, skip + limitNum);
+
+    const items = paginatedItems.map((item) => toApiItem(item as unknown as Record<string, unknown>));
     res.status(200).json({ items, page: pageNum, limit: limitNum, total });
   } catch (error) {
     console.error('GET /contract error:', error);
@@ -53,7 +52,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
 router.get('/:templateId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { templateId } = req.params;
-    const item = await ContractTemplate.findOne({ templateId }).lean();
+    const item = await ContractTemplate.findOne({ templateId });
 
     if (!item) {
       res.status(404).json({ error: 'Contract template not found' });
@@ -88,7 +87,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       sectionIds: body.sectionIds ?? [],
     });
 
-    res.status(201).json({ item: toApiItem(created.toObject() as unknown as Record<string, unknown>) });
+    res.status(201).json({ item: toApiItem(created as unknown as Record<string, unknown>) });
   } catch (error: unknown) {
     const err = error as { code?: number };
     if (err?.code === 11000) {
@@ -117,7 +116,7 @@ router.put('/:templateId', async (req: Request, res: Response): Promise<void> =>
       { templateId },
       { $set: update },
       { new: true }
-    ).lean();
+    );
 
     if (!updated) {
       res.status(404).json({ error: 'Contract template not found' });
