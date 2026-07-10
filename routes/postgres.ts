@@ -15,7 +15,7 @@ let redisClient: ReturnType<typeof createClient> | null = null;
 
 export const getRedisClient = async () => {
   if (redisClient && redisClient.isOpen) return redisClient;
-  
+
   if (redisClient && !redisClient.isOpen) {
     try {
       await redisClient.quit();
@@ -24,7 +24,7 @@ export const getRedisClient = async () => {
     }
     redisClient = null;
   }
-  
+
   redisClient = createClient({ url: REDIS_URL });
   redisClient.on('error', (err) => console.error('Redis error:', err));
   await redisClient.connect();
@@ -71,7 +71,7 @@ export const queryPostgres = async (sql: string, params: unknown[] = [], bypassC
 router.get('/documents', async (req: Request, res: Response): Promise<void> => {
   try {
     const { client, status, category, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -82,7 +82,7 @@ router.get('/documents', async (req: Request, res: Response): Promise<void> => {
 
     if (client) {
       sql += ` AND client = $${paramIndex++}`;
-      params.push(client);
+      params.push(String(client).toLowerCase());
     }
     if (status !== undefined) {
       sql += ` AND status = $${paramIndex++}`;
@@ -98,7 +98,7 @@ router.get('/documents', async (req: Request, res: Response): Promise<void> => {
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -112,7 +112,7 @@ router.get('/documents/:id', async (req: Request, res: Response): Promise<void> 
   try {
     const { id } = req.params;
     const result = await pool.query('SELECT * FROM documents WHERE id = $1', [id]);
-    
+
     if (result.rows.length === 0) {
       res.status(404).json({ isSuccess: false, error: 'Document not found' });
       return;
@@ -129,7 +129,7 @@ router.get('/documents/:id', async (req: Request, res: Response): Promise<void> 
 router.get('/sections', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, status, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -152,7 +152,7 @@ router.get('/sections', async (req: Request, res: Response): Promise<void> => {
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -166,7 +166,7 @@ router.get('/sections/:id', async (req: Request, res: Response): Promise<void> =
   try {
     const { id } = req.params;
     const result = await pool.query('SELECT * FROM sections WHERE id = $1', [id]);
-    
+
     if (result.rows.length === 0) {
       res.status(404).json({ isSuccess: false, error: 'Section not found' });
       return;
@@ -183,7 +183,7 @@ router.get('/sections/:id', async (req: Request, res: Response): Promise<void> =
 router.get('/clauses', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, status, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -206,7 +206,7 @@ router.get('/clauses', async (req: Request, res: Response): Promise<void> => {
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -220,7 +220,7 @@ router.get('/clauses/:id', async (req: Request, res: Response): Promise<void> =>
   try {
     const { id } = req.params;
     const result = await pool.query('SELECT * FROM clauses WHERE id = $1', [id]);
-    
+
     if (result.rows.length === 0) {
       res.status(404).json({ isSuccess: false, error: 'Clause not found' });
       return;
@@ -237,7 +237,7 @@ router.get('/clauses/:id', async (req: Request, res: Response): Promise<void> =>
 router.get('/doc-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -256,7 +256,7 @@ router.get('/doc-histories', async (req: Request, res: Response): Promise<void> 
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -269,7 +269,7 @@ router.get('/doc-histories', async (req: Request, res: Response): Promise<void> 
 router.get('/section-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -288,7 +288,7 @@ router.get('/section-histories', async (req: Request, res: Response): Promise<vo
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -301,7 +301,7 @@ router.get('/section-histories', async (req: Request, res: Response): Promise<vo
 router.get('/clause-histories', async (req: Request, res: Response): Promise<void> => {
   try {
     const { clauseId, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -320,7 +320,7 @@ router.get('/clause-histories', async (req: Request, res: Response): Promise<voi
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     res.json({ isSuccess: true, data: data.rows, page: pageNum, limit: limitNum, total });
   } catch (error) {
@@ -333,23 +333,24 @@ router.get('/clause-histories', async (req: Request, res: Response): Promise<voi
 router.get('/users/:address', async (req: Request, res: Response): Promise<void> => {
   try {
     const { address } = req.params;
-    const result = await pool.query('SELECT * FROM users WHERE address = $1', [address]);
-    
+    const result = await pool.query('SELECT * FROM users WHERE address = $1', [address.toLocaleLowerCase()]);
     if (result.rows.length === 0) {
       res.status(404).json({ isSuccess: false, error: 'User not found' });
       return;
     }
 
     const user = result.rows[0];
-    res.json({ isSuccess: true, data: { 
-      id: user.address,
-      firstName: user.first_name,
-      lastName: user.last_name,
-      email: user.email,
-      role: user.role,
-      dcategory: user.dcategory,
-      onPending: user.on_pending
-    }});
+    res.json({
+      isSuccess: true, data: {
+        id: user.address,
+        firstName: user.first_name,
+        lastName: user.last_name,
+        email: user.email,
+        role: user.role,
+        dcategory: user.dcategory,
+        onPending: user.on_pending
+      }
+    });
   } catch (error) {
     console.error('GET /postgres/users/:address error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
@@ -360,7 +361,7 @@ router.get('/users/:address', async (req: Request, res: Response): Promise<void>
 router.get('/users', async (req: Request, res: Response): Promise<void> => {
   try {
     const { role, dcategory, onPending, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -387,7 +388,7 @@ router.get('/users', async (req: Request, res: Response): Promise<void> => {
       pool.query(sql.replace('SELECT *', 'SELECT COUNT(*)'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
     const users = data.rows.map((user: any) => ({
       id: user.address,
       firstName: user.first_name,
@@ -437,11 +438,11 @@ router.get('/documents-full', async (req: Request, res: Response): Promise<void>
     }
 
     const [data, countResult] = await Promise.all([
-      pool.query(sql + ` ORDER BY d.created_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
+      pool.query(sql + ` ORDER BY CAST(d.id AS INTEGER) ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
       pool.query(sql.replace(/SELECT d\.*,[\s\S]*?FROM/, 'SELECT COUNT(*) FROM'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
     const documents = data.rows.map((doc: any) => ({
       id: doc.id,
       client: doc.client_id ? {
@@ -470,7 +471,7 @@ router.get('/documents-full', async (req: Request, res: Response): Promise<void>
 router.get('/documents-full/:id', async (req: Request, res: Response): Promise<void> => {
   try {
     const { id } = req.params;
-    
+
     const docResult = await pool.query(
       `SELECT d.*,
         u.address as client_id, u.first_name as client_first_name, u.last_name as client_last_name, u.email as client_email
@@ -479,7 +480,7 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
       WHERE d.id = $1`,
       [id]
     );
-    
+
     if (docResult.rows.length === 0) {
       res.status(404).json({ isSuccess: false, error: 'Document not found' });
       return;
@@ -504,7 +505,8 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
           u.address as division_member_id, u.first_name as division_member_first_name, u.last_name as division_member_last_name, u.email as division_member_email
         FROM clauses c 
         LEFT JOIN users u ON c.division_member = u.address 
-        WHERE c.section_id = $1`,
+        WHERE c.section_id = $1
+        ORDER BY CAST(c.id AS INTEGER) ASC`,
         [section.id]
       );
 
@@ -540,24 +542,26 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
     const clientEsign = doc.client_esign_id ? await pool.query('SELECT * FROM esigns WHERE subgraph_id = $1', [doc.client_esign_id]) : null;
     const legalEsign = doc.legal_esign_id ? await pool.query('SELECT * FROM esigns WHERE subgraph_id = $1', [doc.legal_esign_id]) : null;
 
-    res.json({ isSuccess: true, data: {
-      id: doc.id,
-      client: doc.client_id ? {
-        id: doc.client_id,
-        firstName: doc.client_first_name,
-        lastName: doc.client_last_name,
-        email: doc.client_email
-      } : null,
-      category: doc.category,
-      title: doc.title,
-      cid: doc.cid,
-      status: doc.status,
-      reject_reason: doc.reject_reason,
-      created_at: doc.created_at,
-      sections,
-      client_e_sign: clientEsign?.rows[0] || null,
-      legal_e_sign: legalEsign?.rows[0] || null
-    }});
+    res.json({
+      isSuccess: true, data: {
+        id: doc.id,
+        client: doc.client_id ? {
+          id: doc.client_id,
+          firstName: doc.client_first_name,
+          lastName: doc.client_last_name,
+          email: doc.client_email
+        } : null,
+        category: doc.category,
+        title: doc.title,
+        cid: doc.cid,
+        status: doc.status,
+        reject_reason: doc.reject_reason,
+        created_at: doc.created_at,
+        sections,
+        client_e_sign: clientEsign?.rows[0] || null,
+        legal_e_sign: legalEsign?.rows[0] || null
+      }
+    });
   } catch (error) {
     console.error('GET /postgres/documents-full/:id error:', error);
     res.status(500).json({ isSuccess: false, error: String(error) });
@@ -568,7 +572,7 @@ router.get('/documents-full/:id', async (req: Request, res: Response): Promise<v
 router.get('/sections-full', async (req: Request, res: Response): Promise<void> => {
   try {
     const { docId, divisionLeader, status, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -591,7 +595,7 @@ router.get('/sections-full', async (req: Request, res: Response): Promise<void> 
     }
     if (divisionLeader) {
       sql += ` AND s.division_leader = $${paramIndex++}`;
-      params.push(divisionLeader);
+      params.push(String(divisionLeader).toLowerCase());
     }
     if (status !== undefined) {
       sql += ` AND s.status = $${paramIndex++}`;
@@ -599,21 +603,37 @@ router.get('/sections-full', async (req: Request, res: Response): Promise<void> 
     }
 
     const [data, countResult] = await Promise.all([
-      pool.query(sql + ` ORDER BY s.assigned_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
-      pool.query(sql.replace(/SELECT s\.*,[\s\S]*?FROM/, 'SELECT COUNT(*) FROM'), params)
+      pool.query(sql + ` ORDER BY CAST(s.id AS INTEGER) ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
+      pool.query(sql.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) FROM'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
 
     const sections = await Promise.all(data.rows.map(async (section: any) => {
+
       const clausesResult = await pool.query(
         `SELECT c.*, 
           u.address as division_member_id, u.first_name as division_member_first_name, u.last_name as division_member_last_name, u.email as division_member_email
         FROM clauses c 
         LEFT JOIN users u ON c.division_member = u.address 
-        WHERE c.section_id = $1`,
+        WHERE c.section_id = $1
+        ORDER BY CAST(c.id AS INTEGER) ASC`,
         [section.id]
       );
+
+      const clauses = clausesResult.rows.map((clause: any) => ({
+        id: clause.id,
+        cid: clause.cid,
+        assigned_at: clause.assigned_at,
+        status: clause.status,
+        reject_reason: clause.reject_reason,
+        division_member: clause.division_member_id ? {
+          id: clause.division_member_id,
+          firstName: clause.division_member_first_name,
+          lastName: clause.division_member_last_name,
+          email: clause.division_member_email
+        } : null
+      }));
 
       return {
         id: section.id,
@@ -638,19 +658,7 @@ router.get('/sections-full', async (req: Request, res: Response): Promise<void> 
             lastName: section.client_last_name
           } : null
         } : null,
-        clauses: clausesResult.rows.map((clause: any) => ({
-          id: clause.id,
-          cid: clause.cid,
-          assigned_at: clause.assigned_at,
-          status: clause.status,
-          reject_reason: clause.reject_reason,
-          division_member: clause.division_member_id ? {
-            id: clause.division_member_id,
-            firstName: clause.division_member_first_name,
-            lastName: clause.division_member_last_name,
-            email: clause.division_member_email
-          } : null
-        }))
+        clauses: clauses
       };
     }));
 
@@ -665,7 +673,7 @@ router.get('/sections-full', async (req: Request, res: Response): Promise<void> 
 router.get('/clauses-full', async (req: Request, res: Response): Promise<void> => {
   try {
     const { sectionId, divisionMember, status, page = '1', limit = '50' } = req.query;
-    
+
     const pageNum = Math.max(1, Number(page));
     const limitNum = Math.min(200, Math.max(1, Number(limit)));
     const offset = (pageNum - 1) * limitNum;
@@ -690,7 +698,7 @@ router.get('/clauses-full', async (req: Request, res: Response): Promise<void> =
     }
     if (divisionMember) {
       sql += ` AND c.division_member = $${paramIndex++}`;
-      params.push(divisionMember);
+      params.push(String(divisionMember).toLowerCase());
     }
     if (status !== undefined) {
       sql += ` AND c.status = $${paramIndex++}`;
@@ -698,11 +706,11 @@ router.get('/clauses-full', async (req: Request, res: Response): Promise<void> =
     }
 
     const [data, countResult] = await Promise.all([
-      pool.query(sql + ` ORDER BY c.assigned_at DESC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
-      pool.query(sql.replace(/SELECT c\.*,[\s\S]*?FROM/, 'SELECT COUNT(*) FROM'), params)
+      pool.query(sql + ` ORDER BY CAST(c.id AS INTEGER) ASC LIMIT $${paramIndex++} OFFSET $${paramIndex++}`, [...params, limitNum, offset]),
+      pool.query(sql.replace(/SELECT[\s\S]*?FROM/, 'SELECT COUNT(*) FROM'), params)
     ]);
 
-    const total = parseInt(countResult.rows[0].count as string);
+    const total = countResult.rows.length > 0 ? parseInt(countResult.rows[0].count as string) : 0;
     const clauses = data.rows.map((clause: any) => ({
       id: clause.id,
       cid: clause.cid,
