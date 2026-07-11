@@ -20,6 +20,8 @@ const CHANNEL_PATTERNS = [
   'clause:*:assigned',
   'clause:*:submitted',
   'user:*:notification',
+  'user:*:registration_approved',
+  'user:*:registration_rejected',
 ];
 
 export function initializeWebSocketServer(httpServer: HTTPServer): SocketIOServer {
@@ -36,6 +38,13 @@ export function initializeWebSocketServer(httpServer: HTTPServer): SocketIOServe
 
   io.on('connection', (socket) => {
     logInfo(`Client connected: ${socket.id}`);
+
+    // Handle admin auto-join to all rooms
+    socket.on('join:admin', (address: string) => {
+      // Admin joins all rooms to receive all messages
+      socket.join('admin');
+      logInfo(`Socket ${socket.id} joined admin room for address: ${address}`);
+    });
 
     // Handle room joining
     socket.on('join:doc', (docId: string) => {
@@ -97,44 +106,49 @@ export function initializeWebSocketServer(httpServer: HTTPServer): SocketIOServe
 
 export async function startRedisSubscriber(): Promise<void> {
   try {
+    logInfo('Getting Redis client for subscriber...');
     const redis = await getRedisClient();
+    logInfo('Duplicating Redis client for subscriber...');
     const subscriber = redis.duplicate();
 
+    logInfo('Connecting subscriber to Redis...');
     await subscriber.connect();
+    logInfo('Subscriber connected to Redis');
 
     subscriber.on('error', (err) => {
       logError('Redis subscriber error:', err);
     });
 
     // Subscribe to all channel patterns
-    await subscriber.pSubscribe(CHANNEL_PATTERNS, () => {});
-    logInfo(`Redis subscriber listening to channels: ${CHANNEL_PATTERNS.join(', ')}`);
-
-    // Handle incoming messages
-    subscriber.on('pmessage', (pattern, channel, message) => {
+    logInfo(`Subscribing to patterns: ${CHANNEL_PATTERNS.join(', ')}`);
+    
+    // In node-redis v4, pSubscribe callback handles messages directly
+    await subscriber.pSubscribe(CHANNEL_PATTERNS, (message, channel) => {
       try {
         const data = JSON.parse(message);
-        logInfo(`Received Redis message on channel: ${channel}`);
+        logInfo(`Received Redis message on channel: ${channel}, ${message}`);
 
         // Map Redis channel to WebSocket room
-        const room = channel; // Channel names match room names
+        // For user channels, strip the event suffix (everything after the last colon)
+        // e.g., user:{address}:registration_approved -> user:{address}
+        const room = channel.startsWith('user:') ? channel.substring(0, channel.lastIndexOf(':')) : channel;
         
         // Broadcast to all clients in the room
         if (io) {
           io.to(room).emit('event', data);
-          logInfo(`Broadcasted event to room: ${room}`);
+          // Also broadcast to admin room for all events
+          io.to('admin').emit('event', data);
+          logInfo(`Broadcasted event to room: ${room} and admin`);
         }
       } catch (error) {
         logError('Error processing Redis message:', error);
       }
     });
+    
+    logInfo(`Redis subscriber listening to channels: ${CHANNEL_PATTERNS.join(', ')}`);
 
   } catch (error) {
     logError('Failed to start Redis subscriber:', error);
     throw error;
   }
-}
-
-export function getWebSocketServer(): SocketIOServer | null {
-  return io;
 }

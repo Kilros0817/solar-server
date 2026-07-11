@@ -38,11 +38,3 @@ export async function getRedisClient(): Promise<RedisClientType> {
     throw error;
   }
 }
-
-export async function closeRedisClient(): Promise<void> {
-  if (redisClient) {
-    await redisClient.quit();
-    redisClient = null;
-    logInfo('Redis client closed');
-  }
-}

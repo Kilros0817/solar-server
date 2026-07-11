@@ -54,9 +54,14 @@ const httpServer = createServer(app);
 const io = initializeWebSocketServer(httpServer);
 
 // Start Redis subscriber for real-time events
-startRedisSubscriber().catch((error) => {
-  console.error('Failed to start Redis subscriber:', error);
-});
+console.log('Starting Redis subscriber...');
+startRedisSubscriber()
+  .then(() => {
+    console.log('Redis subscriber started successfully');
+  })
+  .catch((error) => {
+    console.error('Failed to start Redis subscriber:', error);
+  });
 
 httpServer.listen(8085, () => {
   console.log("the server is running on port 8085");
