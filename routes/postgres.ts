@@ -1,35 +1,14 @@
 import express, { Request, Response } from 'express';
-import { createClient } from 'redis';
 import crypto from 'crypto';
 import dotenv from 'dotenv';
 import { pool } from '../utils/database';
+import { getRedisClient } from '../services/redis.service';
 
 dotenv.config();
 
-const REDIS_URL = `redis://localhost:6379`;
 const CACHE_TTL_SECONDS = parseInt(String(process.env.CACHE_TTL || '60'), 10);
 
 const router = express.Router();
-
-let redisClient: ReturnType<typeof createClient> | null = null;
-
-export const getRedisClient = async () => {
-  if (redisClient && redisClient.isOpen) return redisClient;
-
-  if (redisClient && !redisClient.isOpen) {
-    try {
-      await redisClient.quit();
-    } catch (e) {
-      // Ignore quit errors
-    }
-    redisClient = null;
-  }
-
-  redisClient = createClient({ url: REDIS_URL });
-  redisClient.on('error', (err) => console.error('Redis error:', err));
-  await redisClient.connect();
-  return redisClient;
-};
 
 const getCacheKey = (key: string) => {
   const hash = crypto.createHash('sha256').update(key).digest('hex');

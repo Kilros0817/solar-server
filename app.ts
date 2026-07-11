@@ -1,8 +1,10 @@
 import express from 'express';
+import { createServer } from 'http';
 import bodyParser from 'body-parser';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import { pool } from './utils/database';
+import { initializeWebSocketServer, startRedisSubscriber } from './services/websocket.service';
 
 // Import routes
 import apiRouter from './routes/api';
@@ -47,7 +49,16 @@ app
   .use("/postgres", postgresRouter)
   .use("/analysis", analysisRouter)
 
+// Create HTTP server and initialize WebSocket
+const httpServer = createServer(app);
+const io = initializeWebSocketServer(httpServer);
 
-app.listen(8085, () => {
+// Start Redis subscriber for real-time events
+startRedisSubscriber().catch((error) => {
+  console.error('Failed to start Redis subscriber:', error);
+});
+
+httpServer.listen(8085, () => {
   console.log("the server is running on port 8085");
+  console.log("WebSocket server initialized");
 }); 

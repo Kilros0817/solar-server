@@ -1,5 +1,5 @@
 import { AnalysisReport } from '../core/types';
-import { getRedisClient } from '../../../routes/postgres';
+import { getRedisClient } from '../../../services/redis.service';
 import { getReportCacheKey, getSubgraphDataWithCache, REPORT_CACHE_TTL_SECONDS } from './redis';
 import { buildReport } from '../core/report-builder';
 

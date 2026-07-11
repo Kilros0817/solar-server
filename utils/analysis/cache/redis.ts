@@ -1,5 +1,5 @@
 import crypto from 'crypto';
-import { getRedisClient } from '../../../routes/postgres';
+import { getRedisClient } from '../../../services/redis.service';
 import { pool } from '../../../utils/database';
 import { SubgraphData } from '../core/types';
 
