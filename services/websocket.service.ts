@@ -153,6 +153,20 @@ export async function startRedisSubscriber(): Promise<void> {
             logInfo(`Broadcasted event to division leader room: ${leaderRoom}`);
           }
 
+          // For clause events, also broadcast to the division member's user room if member is in data
+          if (channel.startsWith('clause:') && data.data?.member) {
+            const memberRoom = `user:${data.data.member.toLowerCase()}`;
+            io.to(memberRoom).emit('event', data);
+            logInfo(`Broadcasted event to division member room: ${memberRoom}`);
+          }
+
+          // For clause events, also broadcast to the division leader's user room if divisionLeader is in data
+          if (channel.startsWith('clause:') && data.data?.divisionLeader) {
+            const leaderRoom = `user:${data.data.divisionLeader.toLowerCase()}`;
+            io.to(leaderRoom).emit('event', data);
+            logInfo(`Broadcasted event to division leader room: ${leaderRoom}`);
+          }
+
           logInfo(`Broadcasted event to room: ${room} and admin`);
         }
       } catch (error) {
