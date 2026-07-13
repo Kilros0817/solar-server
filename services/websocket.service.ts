@@ -132,12 +132,27 @@ export async function startRedisSubscriber(): Promise<void> {
         // For user channels, strip the event suffix (everything after the last colon)
         // e.g., user:{address}:registration_approved -> user:{address}
         const room = channel.startsWith('user:') ? channel.substring(0, channel.lastIndexOf(':')) : channel;
-        
+
         // Broadcast to all clients in the room
         if (io) {
           io.to(room).emit('event', data);
           // Also broadcast to admin room for all events
           io.to('admin').emit('event', data);
+
+          // For doc events, also broadcast to the client's user room if client address is in data
+          if (channel.startsWith('doc:') && data.data?.client) {
+            const clientRoom = `user:${data.data.client.toLowerCase()}`;
+            io.to(clientRoom).emit('event', data);
+            logInfo(`Broadcasted event to client room: ${clientRoom}`);
+          }
+
+          // For section events, also broadcast to the division leader's user room if divisionLeader is in data
+          if (channel.startsWith('section:') && data.data?.divisionLeader) {
+            const leaderRoom = `user:${data.data.divisionLeader.toLowerCase()}`;
+            io.to(leaderRoom).emit('event', data);
+            logInfo(`Broadcasted event to division leader room: ${leaderRoom}`);
+          }
+
           logInfo(`Broadcasted event to room: ${room} and admin`);
         }
       } catch (error) {

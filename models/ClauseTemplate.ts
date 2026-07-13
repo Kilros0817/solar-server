@@ -25,6 +25,14 @@ export const ClauseTemplate = {
       params.push(filter.category);
     }
 
+    if (filter.template_id) {
+      const templateIdFilter = filter.template_id as { $in: string[] };
+      if (templateIdFilter.$in && Array.isArray(templateIdFilter.$in)) {
+        query += ` AND template_id = ANY($${paramIndex++})`;
+        params.push(templateIdFilter.$in);
+      }
+    }
+
     if (filter.$text) {
       const searchText = (filter.$text as { $search: string }).$search;
       query += ` AND (name ILIKE $${paramIndex++} OR description ILIKE $${paramIndex++} OR content ILIKE $${paramIndex++})`;

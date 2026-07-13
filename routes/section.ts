@@ -6,7 +6,7 @@ const router = express.Router();
 
 async function resolveContentFromClauses(clauseIds: string[]): Promise<string> {
   if (!clauseIds || clauseIds.length === 0) return '';
-  const clauses = await ClauseTemplate.find({ templateId: { $in: clauseIds } });
+  const clauses = await ClauseTemplate.find({ template_id: { $in: clauseIds } });
   const orderMap = new Map(clauseIds.map((id, i) => [id, i]));
   clauses.sort((a, b) => (orderMap.get(a.templateId) ?? 0) - (orderMap.get(b.templateId) ?? 0));
   return clauses.map((c) => c.content).join('\n\n');
