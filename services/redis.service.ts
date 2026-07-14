@@ -9,19 +9,19 @@ export async function getRedisClient(): Promise<RedisClientType> {
   }
 
   try {
-    // const redisHost = process.env.REDIS_HOST || 'localhost';
-    // const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
-    // const redisPassword = process.env.REDIS_PASSWORD;
+    const redisHost = process.env.REDIS_HOST || 'localhost';
+    const redisPort = parseInt(process.env.REDIS_PORT || '6379', 10);
+    const redisPassword = process.env.REDIS_PASSWORD;
 
-    // redisClient = createClient({
-    //   socket: {
-    //     host: redisHost,
-    //     port: redisPort,
-    //   },
-    //   password: redisPassword,
-    // });
+    redisClient = createClient({
+      socket: {
+        host: redisHost,
+        port: redisPort,
+      },
+      password: redisPassword,
+    });
 
-    redisClient = createClient({ url: "redis://localhost:6379" });
+    // redisClient = createClient({ url: "redis://localhost:6379" });
 
     redisClient.on('error', (err) => {
       logError('Redis Client Error:', err);

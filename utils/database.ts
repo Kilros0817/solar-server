@@ -1,10 +1,18 @@
 import { Pool } from 'pg';
 import dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 
 dotenv.config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
+  ssl: {
+    ca: fs.readFileSync(
+      path.join(__dirname, "../cert/global-bundle.pem")
+    ),
+    rejectUnauthorized: true,
+  },
   connectionTimeoutMillis: 10000,
   idleTimeoutMillis: 30000,
   max: 20,

@@ -42,3 +42,4 @@ _meta
 .serverless
 .DS_Store
 package-lock.json
+cert
