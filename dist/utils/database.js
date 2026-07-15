@@ -12,7 +12,7 @@ dotenv_1.default.config();
 const pool = new pg_1.Pool({
     connectionString: process.env.DATABASE_URL,
     ssl: {
-        ca: fs_1.default.readFileSync(path_1.default.join(__dirname, "../cert/global-bundle.pem")),
+        ca: fs_1.default.readFileSync(path_1.default.join(process.cwd(), "cert/global-bundle.pem")),
         rejectUnauthorized: true,
     },
     connectionTimeoutMillis: 10000,
