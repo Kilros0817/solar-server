@@ -10,7 +10,8 @@
     "dev": "nodemon --exec ts-node app.ts",
     "start": "node dist/app.js",
     "start:dev": "ts-node app.ts",
-    "seed:reseed": "ts-node scripts/reseedTemplates.ts"
+    "seed:reseed": "ts-node scripts/reseedTemplates.ts",
+    "init:templates": "ts-node scripts/init-templates.ts"
   },
   "dependencies": {
     "@types/pg": "^8.20.0",
