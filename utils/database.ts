@@ -9,7 +9,7 @@ const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
     ca: fs.readFileSync(
-      path.join(__dirname, "../../cert/global-bundle.pem")
+      path.join(__dirname, "../cert/global-bundle.pem")
     ),
     rejectUnauthorized: true,
   },
