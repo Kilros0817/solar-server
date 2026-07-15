@@ -79,19 +79,28 @@ const seedContractTemplates = [
 async function ensureContractTemplatesSeeded() {
     if (seedContractTemplates.length === 0)
         return;
-    await ContractTemplate_1.ContractTemplate.bulkWrite(seedContractTemplates.map((t) => ({
-        updateOne: {
-            filter: { templateId: t.templateId },
-            update: {
+    for (const template of seedContractTemplates) {
+        const existing = await ContractTemplate_1.ContractTemplate.findOne({ templateId: template.templateId });
+        if (existing) {
+            await ContractTemplate_1.ContractTemplate.findOneAndUpdate({ templateId: template.templateId }, {
                 $set: {
-                    name: t.name,
-                    description: t.description,
-                    category: t.category,
-                    createdBy: t.createdBy,
-                    sectionIds: t.sectionIds,
+                    name: template.name,
+                    description: template.description,
+                    category: template.category,
+                    createdBy: template.createdBy,
+                    sectionIds: template.sectionIds,
                 },
-            },
-            upsert: true,
-        },
-    })));
+            }, { new: true });
+        }
+        else {
+            await ContractTemplate_1.ContractTemplate.create({
+                templateId: template.templateId,
+                name: template.name,
+                description: template.description,
+                category: template.category,
+                createdBy: template.createdBy,
+                sectionIds: template.sectionIds,
+            });
+        }
+    }
 }

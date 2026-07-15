@@ -6,37 +6,37 @@ const throughput_1 = require("./throughput");
 const division_rollup_1 = require("./division-rollup");
 function buildReport(data) {
     const { docHistories, sectionHistories, clauseHistories } = data;
-    const docMap = (0, analyzers_1.groupBy)(docHistories, (e) => e.document.id);
-    const sectionMap = (0, analyzers_1.groupBy)(sectionHistories, (e) => e.section.id);
-    const clauseMap = (0, analyzers_1.groupBy)(clauseHistories ?? [], (e) => e.clause.id);
+    const docMap = (0, analyzers_1.groupBy)(docHistories, (e) => e.doc_id);
+    const sectionMap = (0, analyzers_1.groupBy)(sectionHistories, (e) => e.section_id);
+    const clauseMap = (0, analyzers_1.groupBy)(clauseHistories ?? [], (e) => e.clause_id);
     const totalWorkflows = docMap.size;
     let completedWorkflows = 0;
     const cycleTimes = [];
     const completedDocMeta = [];
     const allSectionResults = [];
     const documents = Array.from(docMap.entries())
-        .filter(([, events]) => events.some((e) => e.docStatus === 4))
+        .filter(([, events]) => events.some((e) => e.doc_status === 4))
         .map(([docId, events]) => {
         const docAnalysis = (0, analyzers_1.analyzeDocument)(events);
         if (docAnalysis.isCompleted) {
             completedWorkflows++;
             if (docAnalysis.cycleTime !== null)
                 cycleTimes.push(docAnalysis.cycleTime);
-            const esignEvent = events.find((e) => e.docStatus === 4);
+            const esignEvent = events.find((e) => e.doc_status === 4);
             if (esignEvent) {
                 completedDocMeta.push({
                     cycleTime: docAnalysis.cycleTime,
-                    esignDate: parseInt(esignEvent.date)
+                    esignDate: esignEvent.date
                 });
             }
         }
         const docSections = Array.from(sectionMap.entries())
-            .filter(([, sEvents]) => sEvents[0]?.section?.doc?.id === docId)
+            .filter(([, sEvents]) => sEvents[0]?.doc_id === docId)
             .map(([sectionId, sEvents]) => {
             const sResult = (0, analyzers_1.analyzeSection)(sEvents);
             allSectionResults.push(sResult);
             const sectionClauses = Array.from(clauseMap.entries())
-                .filter(([, cEvents]) => cEvents[0]?.clause?.section?.id === sectionId)
+                .filter(([, cEvents]) => cEvents[0]?.section_id === sectionId)
                 .map(([clauseId, cEvents]) => {
                 const clauseAnalysis = (0, analyzers_1.analyzeClause)(cEvents);
                 return {

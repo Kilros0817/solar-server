@@ -6,7 +6,6 @@ exports.pickBottleneck = pickBottleneck;
 exports.analyzeDocument = analyzeDocument;
 exports.analyzeSection = analyzeSection;
 exports.analyzeClause = analyzeClause;
-const types_1 = require("./types");
 function avg(values) {
     if (values.length === 0)
         return null;
@@ -31,32 +30,32 @@ function pickBottleneck(stages) {
     });
 }
 function analyzeDocument(events) {
-    const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
-    const esignEvent = sorted.find((e) => e.docStatus === 4);
+    const sorted = [...events].sort((a, b) => a.date - b.date);
+    const esignEvent = sorted.find((e) => e.doc_status === 4);
     const isCompleted = !!esignEvent;
     let cycleTime = null;
     if (isCompleted && sorted.length >= 2) {
-        cycleTime = parseInt(esignEvent.date) - parseInt(sorted[0].date);
+        cycleTime = esignEvent.date - sorted[0].date;
     }
     const trimmed = esignEvent
         ? sorted.slice(0, sorted.indexOf(esignEvent) + 1)
         : sorted;
-    const firstEventTime = parseInt(trimmed[0].date);
+    const firstEventTime = trimmed[0].date;
     const requestEvent = trimmed.find((e) => e.type === 1);
-    const pendingToRequest = requestEvent && parseInt(requestEvent.date) > firstEventTime
-        ? parseInt(requestEvent.date) - firstEventTime
+    const pendingToRequest = requestEvent && requestEvent.date > firstEventTime
+        ? requestEvent.date - firstEventTime
         : null;
     const firstRequest = trimmed.find((e) => e.type === 1);
     const lastApprove = [...trimmed].reverse().find((e) => e.type === 2);
-    const requestToApproved = firstRequest && lastApprove && parseInt(lastApprove.date) > parseInt(firstRequest.date)
-        ? parseInt(lastApprove.date) - parseInt(firstRequest.date)
+    const requestToApproved = firstRequest && lastApprove && lastApprove.date > firstRequest.date
+        ? lastApprove.date - firstRequest.date
         : null;
     let approvedToEsigned = null;
     if (lastApprove) {
-        const approvedTime = parseInt(lastApprove.date);
-        const esignAfterApprove = trimmed.find((e) => (e.type === 4 || e.type === 5) && parseInt(e.date) > approvedTime);
+        const approvedTime = lastApprove.date;
+        const esignAfterApprove = trimmed.find((e) => (e.type === 4 || e.type === 5) && e.date > approvedTime);
         if (esignAfterApprove) {
-            approvedToEsigned = parseInt(esignAfterApprove.date) - approvedTime;
+            approvedToEsigned = esignAfterApprove.date - approvedTime;
         }
     }
     const rejectCount = trimmed.filter((e) => e.type === 3).length;
@@ -74,19 +73,19 @@ function analyzeDocument(events) {
     };
 }
 function analyzeAssignmentEvents(events, getMetadata) {
-    const sorted = [...events].sort((a, b) => parseInt(a.date) - parseInt(b.date));
+    const sorted = [...events].sort((a, b) => a.date - b.date);
     const metadata = getMetadata ? getMetadata(sorted) : {};
     const assignEvent = sorted.find((e) => e.type === 0);
     const requestAfterAssign = assignEvent
-        ? sorted.find((e) => e.type === 1 && parseInt(e.date) > parseInt(assignEvent.date))
+        ? sorted.find((e) => e.type === 1 && e.date > assignEvent.date)
         : null;
     const assignToRequest = assignEvent && requestAfterAssign
-        ? parseInt(requestAfterAssign.date) - parseInt(assignEvent.date)
+        ? requestAfterAssign.date - assignEvent.date
         : null;
     const firstRequest = sorted.find((e) => e.type === 1);
     const lastApprove = [...sorted].reverse().find((e) => e.type === 2);
-    const requestToApprove = firstRequest && lastApprove && parseInt(lastApprove.date) > parseInt(firstRequest.date)
-        ? parseInt(lastApprove.date) - parseInt(firstRequest.date)
+    const requestToApprove = firstRequest && lastApprove && lastApprove.date > firstRequest.date
+        ? lastApprove.date - firstRequest.date
         : null;
     const rejectCount = sorted.filter((e) => e.type === 3).length;
     const reassignCount = sorted.filter((e) => e.type === 4).length;
@@ -104,19 +103,19 @@ function analyzeAssignmentEvents(events, getMetadata) {
 }
 function analyzeSection(events) {
     const getMetadata = (sorted) => {
-        const leader = sorted[0]?.section?.divisionLeader;
+        const leader = sorted[0]?.division_leader;
         return {
-            division: leader ? (0, types_1.toDiv)(leader.dcategory) : 'NoDivision',
-            leaderName: leader ? `${leader.firstName} ${leader.lastName}` : null,
+            division: 'NoDivision',
+            leaderName: leader || null,
         };
     };
     return analyzeAssignmentEvents(events, getMetadata);
 }
 function analyzeClause(events) {
     const getMetadata = (sorted) => {
-        const member = sorted[0]?.clause?.divisionMember;
+        const member = sorted[0]?.division_member;
         return {
-            memberName: member ? `${member.firstName} ${member.lastName}` : null,
+            memberName: member || null,
         };
     };
     return analyzeAssignmentEvents(events, getMetadata);

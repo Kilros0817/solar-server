@@ -16,16 +16,13 @@ router.get('/', async (req, res) => {
             filter.$text = { $search: q.trim() };
         const pageNum = Math.max(1, Number(page ?? '1') || 1);
         const limitNum = Math.min(200, Math.max(1, Number(limit ?? '50') || 50));
-        const skip = (pageNum - 1) * limitNum;
         const [items, total] = await Promise.all([
-            ClauseTemplate_1.ClauseTemplate.find(filter)
-                .sort({ name: 1 })
-                .skip(skip)
-                .limit(limitNum)
-                .lean(),
+            ClauseTemplate_1.ClauseTemplate.find(filter),
             ClauseTemplate_1.ClauseTemplate.countDocuments(filter),
         ]);
-        res.status(200).json({ items, page: pageNum, limit: limitNum, total });
+        const skip = (pageNum - 1) * limitNum;
+        const paginatedItems = items.slice(skip, skip + limitNum);
+        res.status(200).json({ items: paginatedItems, page: pageNum, limit: limitNum, total });
     }
     catch (error) {
         console.error('GET /clause error:', error);
@@ -35,7 +32,7 @@ router.get('/', async (req, res) => {
 router.get('/:templateId', async (req, res) => {
     try {
         const { templateId } = req.params;
-        const item = await ClauseTemplate_1.ClauseTemplate.findOne({ templateId }).lean();
+        const item = await ClauseTemplate_1.ClauseTemplate.findOne({ templateId });
         if (!item) {
             res.status(404).json({ error: 'Clause template not found' });
             return;
@@ -61,7 +58,7 @@ router.post('/', async (req, res) => {
             content: body.content,
             category: body.category,
         });
-        res.status(201).json({ item: created.toObject() });
+        res.status(201).json({ item: created });
     }
     catch (error) {
         if (error?.code === 11000) {
@@ -83,7 +80,7 @@ router.put('/:templateId', async (req, res) => {
                 ...(body.content !== undefined ? { content: body.content } : {}),
                 ...(body.category !== undefined ? { category: body.category } : {}),
             },
-        }, { new: true }).lean();
+        }, { new: true });
         if (!updated) {
             res.status(404).json({ error: 'Clause template not found' });
             return;

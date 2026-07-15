@@ -1,49 +1,134 @@
 "use strict";
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    var desc = Object.getOwnPropertyDescriptor(m, k);
-    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
-      desc = { enumerable: true, get: function() { return m[k]; } };
-    }
-    Object.defineProperty(o, k2, desc);
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || (function () {
-    var ownKeys = function(o) {
-        ownKeys = Object.getOwnPropertyNames || function (o) {
-            var ar = [];
-            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
-            return ar;
-        };
-        return ownKeys(o);
-    };
-    return function (mod) {
-        if (mod && mod.__esModule) return mod;
-        var result = {};
-        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
-        __setModuleDefault(result, mod);
-        return result;
-    };
-})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.ContractTemplate = void 0;
-const mongoose_1 = __importStar(require("mongoose"));
-const ContractTemplateSchema = new mongoose_1.Schema({
-    templateId: { type: String, required: true, unique: true, index: true },
-    name: { type: String, required: true, trim: true },
-    description: { type: String, required: true, trim: true },
-    category: { type: String, required: true, index: true, trim: true },
-    createdBy: { type: String, required: true, trim: true },
-    sectionIds: { type: [String], default: [] },
-}, { timestamps: true });
-ContractTemplateSchema.index({ name: 'text', description: 'text', category: 'text' });
-exports.ContractTemplate = mongoose_1.default.models.ContractTemplate
-    ? mongoose_1.default.models.ContractTemplate
-    : mongoose_1.default.model('ContractTemplate', ContractTemplateSchema);
+const database_1 = require("../utils/database");
+exports.ContractTemplate = {
+    async find(filter = {}) {
+        let query = 'SELECT * FROM contract_templates WHERE 1=1';
+        const params = [];
+        let paramIndex = 1;
+        if (filter.category) {
+            query += ` AND category = $${paramIndex++}`;
+            params.push(filter.category);
+        }
+        if (filter.$text) {
+            const searchText = filter.$text.$search;
+            query += ` AND (name ILIKE $${paramIndex++} OR description ILIKE $${paramIndex++} OR category ILIKE $${paramIndex++})`;
+            const searchTerm = `%${searchText}%`;
+            params.push(searchTerm, searchTerm, searchTerm);
+        }
+        query += ' ORDER BY name';
+        const result = await database_1.pool.query(query, params);
+        return result.rows.map((row) => ({
+            id: row.id,
+            templateId: row.template_id,
+            name: row.name,
+            description: row.description,
+            category: row.category,
+            createdBy: row.created_by,
+            sectionIds: row.section_ids || [],
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+        }));
+    },
+    async findOne(filter) {
+        if (filter.templateId) {
+            const result = await database_1.pool.query('SELECT * FROM contract_templates WHERE template_id = $1', [filter.templateId]);
+            if (result.rows.length === 0)
+                return null;
+            const row = result.rows[0];
+            return {
+                id: row.id,
+                templateId: row.template_id,
+                name: row.name,
+                description: row.description,
+                category: row.category,
+                createdBy: row.created_by,
+                sectionIds: row.section_ids || [],
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+            };
+        }
+        return null;
+    },
+    async create(data) {
+        const result = await database_1.pool.query('INSERT INTO contract_templates (template_id, name, description, category, created_by, section_ids) VALUES ($1, $2, $3, $4, $5, $6) RETURNING *', [data.templateId, data.name, data.description, data.category, data.createdBy, data.sectionIds || []]);
+        const row = result.rows[0];
+        return {
+            id: row.id,
+            templateId: row.template_id,
+            name: row.name,
+            description: row.description,
+            category: row.category,
+            createdBy: row.created_by,
+            sectionIds: row.section_ids || [],
+            createdAt: row.created_at,
+            updatedAt: row.updated_at,
+        };
+    },
+    async findOneAndUpdate(filter, update, options) {
+        if (filter.templateId) {
+            const setClause = Object.keys(update.$set || {})
+                .map((key, i) => `${key} = $${i + 2}`)
+                .join(', ');
+            const values = Object.values(update.$set || {});
+            const result = await database_1.pool.query(`UPDATE contract_templates SET ${setClause}, updated_at = CURRENT_TIMESTAMP WHERE template_id = $1 RETURNING *`, [filter.templateId, ...values]);
+            if (result.rows.length === 0)
+                return null;
+            const row = result.rows[0];
+            return {
+                id: row.id,
+                templateId: row.template_id,
+                name: row.name,
+                description: row.description,
+                category: row.category,
+                createdBy: row.created_by,
+                sectionIds: row.section_ids || [],
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+            };
+        }
+        return null;
+    },
+    async findOneAndDelete(filter) {
+        if (filter.templateId) {
+            const result = await database_1.pool.query('DELETE FROM contract_templates WHERE template_id = $1 RETURNING *', [filter.templateId]);
+            if (result.rows.length === 0)
+                return null;
+            const row = result.rows[0];
+            return {
+                id: row.id,
+                templateId: row.template_id,
+                name: row.name,
+                description: row.description,
+                category: row.category,
+                createdBy: row.created_by,
+                sectionIds: row.section_ids || [],
+                createdAt: row.created_at,
+                updatedAt: row.updated_at,
+            };
+        }
+        return null;
+    },
+    async countDocuments(filter = {}) {
+        let query = 'SELECT COUNT(*) FROM contract_templates WHERE 1=1';
+        const params = [];
+        let paramIndex = 1;
+        if (filter.category) {
+            query += ` AND category = $${paramIndex++}`;
+            params.push(filter.category);
+        }
+        if (filter.$text) {
+            const searchText = filter.$text.$search;
+            query += ` AND (name ILIKE $${paramIndex++} OR description ILIKE $${paramIndex++} OR category ILIKE $${paramIndex++})`;
+            const searchTerm = `%${searchText}%`;
+            params.push(searchTerm, searchTerm, searchTerm);
+        }
+        const result = await database_1.pool.query(query, params);
+        return parseInt(result.rows[0].count, 10);
+    },
+    async deleteMany(filter = {}) {
+        const result = await database_1.pool.query('DELETE FROM contract_templates');
+        return { deletedCount: result.rowCount || 0 };
+    },
+};

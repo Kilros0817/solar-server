@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getOrBuildReport = void 0;
-const subgraph_1 = require("../../../routes/subgraph");
+const redis_service_1 = require("../../../services/redis.service");
 const redis_1 = require("./redis");
 const report_builder_1 = require("../core/report-builder");
 const getOrBuildReport = async () => {
@@ -11,7 +11,7 @@ const getOrBuildReport = async () => {
             return null;
         }
         const { data, hash: dataHash } = subgraphData;
-        const redis = await (0, subgraph_1.getRedisClient)();
+        const redis = await (0, redis_service_1.getRedisClient)();
         const cachedReport = await redis.get((0, redis_1.getReportCacheKey)(dataHash));
         if (cachedReport) {
             return { report: JSON.parse(cachedReport), dataHash };

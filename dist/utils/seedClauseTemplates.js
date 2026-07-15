@@ -113,18 +113,26 @@ const seedClauseTemplates = [
 async function ensureClauseTemplatesSeeded() {
     if (seedClauseTemplates.length === 0)
         return;
-    await ClauseTemplate_1.ClauseTemplate.bulkWrite(seedClauseTemplates.map((t) => ({
-        updateOne: {
-            filter: { templateId: t.templateId },
-            update: {
+    for (const template of seedClauseTemplates) {
+        const existing = await ClauseTemplate_1.ClauseTemplate.findOne({ templateId: template.templateId });
+        if (existing) {
+            await ClauseTemplate_1.ClauseTemplate.findOneAndUpdate({ templateId: template.templateId }, {
                 $set: {
-                    name: t.name,
-                    description: t.description,
-                    content: (0, lexicalJson_1.plainTextToLexicalJson)(t.content),
-                    category: t.category,
+                    name: template.name,
+                    description: template.description,
+                    content: (0, lexicalJson_1.plainTextToLexicalJson)(template.content),
+                    category: template.category,
                 },
-            },
-            upsert: true,
-        },
-    })));
+            }, { new: true });
+        }
+        else {
+            await ClauseTemplate_1.ClauseTemplate.create({
+                templateId: template.templateId,
+                name: template.name,
+                description: template.description,
+                content: (0, lexicalJson_1.plainTextToLexicalJson)(template.content),
+                category: template.category,
+            });
+        }
+    }
 }

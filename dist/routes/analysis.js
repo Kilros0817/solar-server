@@ -131,7 +131,7 @@ router.get('/report', async (_req, res) => {
     try {
         const result = await (0, analysis_1.getOrBuildReport)();
         if (!result) {
-            res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from subgraph' });
+            res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from PostgreSQL' });
             return;
         }
         res.json({ isSuccess: true, report: result.report });
@@ -145,7 +145,7 @@ router.get('/download-report', async (_req, res) => {
     try {
         const result = await (0, analysis_1.getOrBuildReport)();
         if (!result) {
-            res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from subgraph' });
+            res.status(502).json({ isSuccess: false, error: 'Failed to fetch data from PostgreSQL' });
             return;
         }
         const { report } = result;

@@ -4,28 +4,32 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
+const http_1 = require("http");
 const body_parser_1 = __importDefault(require("body-parser"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const mongoose_1 = __importDefault(require("mongoose"));
+const database_1 = require("./utils/database");
+const websocket_service_1 = require("./services/websocket.service");
 const api_1 = __importDefault(require("./routes/api"));
 const clause_1 = __importDefault(require("./routes/clause"));
 const section_1 = __importDefault(require("./routes/section"));
 const contract_1 = __importDefault(require("./routes/contract"));
 const upload_1 = __importDefault(require("./routes/upload"));
-const subgraph_1 = __importDefault(require("./routes/subgraph"));
+const postgres_1 = __importDefault(require("./routes/postgres"));
 const support_1 = __importDefault(require("./routes/support"));
 const analysis_1 = __importDefault(require("./routes/analysis"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
-const connectionString = `mongodb+srv://${process.env.USER_NAME}:${encodeURIComponent(process.env.PASSWORD)}@cluster0.dwfddsb.mongodb.net/solar?retryWrites=true&w=majority`;
-mongoose_1.default.connect(connectionString, {}).then(() => {
-    console.log('Connected to Database');
-}).catch((error) => {
-    console.error('Error connecting to Database:', error);
+database_1.pool.query('SELECT NOW()', (err, res) => {
+    if (err) {
+        console.error('Error connecting to PostgreSQL:', err);
+    }
+    else {
+        console.log('Connected to PostgreSQL database');
+    }
 });
 const corsOptions = {
-    origin: ["http://localhost:3000", "https://app.tomeblock.com", "https://www.tomeblock.com"],
+    origin: process.env.CORS_ORIGIN?.split(',') || ['https://app.tomeblock.com', 'http://localhost:3000'],
     credentials: false,
 };
 app
@@ -38,8 +42,19 @@ app
     .use("/contract", contract_1.default)
     .use("/upload", upload_1.default)
     .use("/support", support_1.default)
-    .use("/subgraph", subgraph_1.default)
+    .use("/postgres", postgres_1.default)
     .use("/analysis", analysis_1.default);
-app.listen(8085, () => {
+const httpServer = (0, http_1.createServer)(app);
+const io = (0, websocket_service_1.initializeWebSocketServer)(httpServer);
+console.log('Starting Redis subscriber...');
+(0, websocket_service_1.startRedisSubscriber)()
+    .then(() => {
+    console.log('Redis subscriber started successfully');
+})
+    .catch((error) => {
+    console.error('Failed to start Redis subscriber:', error);
+});
+httpServer.listen(8085, () => {
     console.log("the server is running on port 8085");
+    console.log("WebSocket server initialized");
 });

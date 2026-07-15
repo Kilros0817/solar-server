@@ -10,9 +10,7 @@ const router = express_1.default.Router();
 async function resolveContentFromClauses(clauseIds) {
     if (!clauseIds || clauseIds.length === 0)
         return '';
-    const clauses = await ClauseTemplate_1.ClauseTemplate.find({ templateId: { $in: clauseIds } })
-        .sort({ templateId: 1 })
-        .lean();
+    const clauses = await ClauseTemplate_1.ClauseTemplate.find({ template_id: { $in: clauseIds } });
     const orderMap = new Map(clauseIds.map((id, i) => [id, i]));
     clauses.sort((a, b) => (orderMap.get(a.templateId) ?? 0) - (orderMap.get(b.templateId) ?? 0));
     return clauses.map((c) => c.content).join('\n\n');
@@ -29,16 +27,13 @@ router.get('/', async (req, res) => {
             filter.$text = { $search: q.trim() };
         const pageNum = Math.max(1, Number(page ?? '1') || 1);
         const limitNum = Math.min(200, Math.max(1, Number(limit ?? '50') || 50));
-        const skip = (pageNum - 1) * limitNum;
         const [rawItems, total] = await Promise.all([
-            SectionTemplate_1.SectionTemplate.find(filter)
-                .sort({ sectionName: 1, name: 1 })
-                .skip(skip)
-                .limit(limitNum)
-                .lean(),
+            SectionTemplate_1.SectionTemplate.find(filter),
             SectionTemplate_1.SectionTemplate.countDocuments(filter),
         ]);
-        const items = await Promise.all(rawItems.map(async (item) => ({
+        const skip = (pageNum - 1) * limitNum;
+        const paginatedItems = rawItems.slice(skip, skip + limitNum);
+        const items = await Promise.all(paginatedItems.map(async (item) => ({
             ...item,
             content: await resolveContentFromClauses(item.clauseIds ?? []),
         })));
@@ -52,7 +47,7 @@ router.get('/', async (req, res) => {
 router.get('/:templateId', async (req, res) => {
     try {
         const { templateId } = req.params;
-        const item = await SectionTemplate_1.SectionTemplate.findOne({ templateId }).lean();
+        const item = await SectionTemplate_1.SectionTemplate.findOne({ templateId });
         if (!item) {
             res.status(404).json({ error: 'Section template not found' });
             return;
@@ -82,9 +77,8 @@ router.post('/', async (req, res) => {
             category: body.category,
             clauseIds: body.clauseIds ?? [],
         });
-        const item = created.toObject();
-        const content = await resolveContentFromClauses(item.clauseIds ?? []);
-        res.status(201).json({ item: { ...item, content } });
+        const content = await resolveContentFromClauses(created.clauseIds ?? []);
+        res.status(201).json({ item: { ...created, content } });
     }
     catch (error) {
         if (error?.code === 11000) {
@@ -110,7 +104,7 @@ router.put('/:templateId', async (req, res) => {
             update.category = body.category;
         if (body.clauseIds !== undefined)
             update.clauseIds = body.clauseIds;
-        const updated = await SectionTemplate_1.SectionTemplate.findOneAndUpdate({ templateId }, { $set: update }, { new: true }).lean();
+        const updated = await SectionTemplate_1.SectionTemplate.findOneAndUpdate({ templateId }, { $set: update }, { new: true });
         if (!updated) {
             res.status(404).json({ error: 'Section template not found' });
             return;

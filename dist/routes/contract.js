@@ -31,16 +31,13 @@ router.get('/', async (req, res) => {
             filter.$text = { $search: q.trim() };
         const pageNum = Math.max(1, Number(page ?? '1') || 1);
         const limitNum = Math.min(200, Math.max(1, Number(limit ?? '50') || 50));
-        const skip = (pageNum - 1) * limitNum;
         const [rawItems, total] = await Promise.all([
-            ContractTemplate_1.ContractTemplate.find(filter)
-                .sort({ name: 1 })
-                .skip(skip)
-                .limit(limitNum)
-                .lean(),
+            ContractTemplate_1.ContractTemplate.find(filter),
             ContractTemplate_1.ContractTemplate.countDocuments(filter),
         ]);
-        const items = rawItems.map((item) => toApiItem(item));
+        const skip = (pageNum - 1) * limitNum;
+        const paginatedItems = rawItems.slice(skip, skip + limitNum);
+        const items = paginatedItems.map((item) => toApiItem(item));
         res.status(200).json({ items, page: pageNum, limit: limitNum, total });
     }
     catch (error) {
@@ -51,7 +48,7 @@ router.get('/', async (req, res) => {
 router.get('/:templateId', async (req, res) => {
     try {
         const { templateId } = req.params;
-        const item = await ContractTemplate_1.ContractTemplate.findOne({ templateId }).lean();
+        const item = await ContractTemplate_1.ContractTemplate.findOne({ templateId });
         if (!item) {
             res.status(404).json({ error: 'Contract template not found' });
             return;
@@ -80,7 +77,7 @@ router.post('/', async (req, res) => {
             createdBy: body.createdBy,
             sectionIds: body.sectionIds ?? [],
         });
-        res.status(201).json({ item: toApiItem(created.toObject()) });
+        res.status(201).json({ item: toApiItem(created) });
     }
     catch (error) {
         const err = error;
@@ -107,7 +104,7 @@ router.put('/:templateId', async (req, res) => {
             update.createdBy = body.createdBy;
         if (body.sectionIds !== undefined)
             update.sectionIds = body.sectionIds;
-        const updated = await ContractTemplate_1.ContractTemplate.findOneAndUpdate({ templateId }, { $set: update }, { new: true }).lean();
+        const updated = await ContractTemplate_1.ContractTemplate.findOneAndUpdate({ templateId }, { $set: update }, { new: true });
         if (!updated) {
             res.status(404).json({ error: 'Contract template not found' });
             return;
