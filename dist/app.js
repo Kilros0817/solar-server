@@ -30,7 +30,7 @@ database_1.pool.query('SELECT NOW()', (err, res) => {
 });
 const corsOptions = {
     origin: process.env.CORS_ORIGIN?.split(',') || ['https://app.tomeblock.com', 'http://localhost:3000'],
-    credentials: false,
+    credentials: true,
 };
 app
     .use((0, cors_1.default)(corsOptions))
